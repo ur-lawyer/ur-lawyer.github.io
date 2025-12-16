@@ -146,7 +146,7 @@ def main():
 
     # Process ONLY ONE keyword per run
     line = lines[0]
-    title, focus, permalink, semantic = [x.strip() for x in line.split("|")]
+    title, focus_kw, permalink, semantic = [x.strip() for x in line.split("|")]
 
     today = datetime.date.today().strftime("%Y-%m-%d")
     post_path = f"{POSTS_DIR}/{today}-{permalink}.md"
