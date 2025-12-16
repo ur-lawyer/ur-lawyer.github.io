@@ -1,42 +1,38 @@
 import os
 import datetime
-import google.generativeai as genai
+from google import genai
 from PIL import Image, ImageDraw
 import textwrap
 
-# ---------------- CONFIG ----------------
 KEYWORDS_FILE = "keywords.txt"
 POSTS_DIR = "_posts"
 IMAGES_DIR = "images"
-MODEL_NAME = "gemini-1.5-flash"
-# ----------------------------------------
+MODEL = "models/gemini-1.5-flash"
 
 os.makedirs(POSTS_DIR, exist_ok=True)
 os.makedirs(IMAGES_DIR, exist_ok=True)
 
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 
-def read_keywords():
+def get_keyword():
     with open(KEYWORDS_FILE, "r", encoding="utf-8") as f:
         for line in f:
             if "|" in line:
-                return [x.strip() for x in line.split("|")]
-    return None
+                return line.strip(), [x.strip() for x in line.split("|")]
+    return None, None
 
 
-def remove_used_keyword(used_line):
+def remove_keyword(line):
     with open(KEYWORDS_FILE, "r", encoding="utf-8") as f:
         lines = f.readlines()
     with open(KEYWORDS_FILE, "w", encoding="utf-8") as f:
-        for line in lines:
-            if used_line not in line:
-                f.write(line)
+        for l in lines:
+            if l.strip() != line:
+                f.write(l)
 
 
 def generate_article(title, focus_kw, semantic_kw):
-    model = genai.GenerativeModel(MODEL_NAME)
-
     prompt = f"""
 write an SEO-optimised blog on the title {title}. using the Focus keyword {focus_kw} and using LSI Keywords {semantic_kw}
 use the following
@@ -53,22 +49,24 @@ Rules:
 - Naturally include focused & semantic keywords
 """
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model=MODEL,
+        contents=prompt,
+    )
+
     return response.text
 
 
-def generate_image(text, output_path):
-    img = Image.new("RGB", (800, 1000), color="#111111")  # 4:5 ratio
+def generate_image(text, path):
+    img = Image.new("RGB", (800, 1000), "#111111")  # 4:5 ratio
     draw = ImageDraw.Draw(img)
-
     wrapped = textwrap.fill(text, 22)
     draw.text((40, 400), wrapped, fill="white")
-
-    img.save(output_path, "WEBP")
+    img.save(path, "WEBP")
 
 
 def main():
-    data = read_keywords()
+    line, data = get_keyword()
     if not data:
         print("❌ No keywords left")
         return
@@ -86,7 +84,6 @@ def main():
     print(f"🚀 Generating: {title}")
 
     content = generate_article(title, focus_kw, semantic_kw)
-
     generate_image(title, image_path)
 
     front_matter = f"""---
@@ -102,9 +99,8 @@ tags: [{semantic_kw}]
     with open(post_path, "w", encoding="utf-8") as f:
         f.write(front_matter + content)
 
-    remove_used_keyword("|".join(data))
-
-    print("✅ Post & image generated")
+    remove_keyword(line)
+    print("✅ Post published")
 
 
 if __name__ == "__main__":

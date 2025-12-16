@@ -22,7 +22,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install google-generativeai pillow
+          pip install google-genai pillow
 
       - name: Generate blog post
         env:
