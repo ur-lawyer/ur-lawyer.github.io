@@ -1,38 +1,37 @@
 import os
 import datetime
 from google import genai
-from PIL import Image, ImageDraw
-import textwrap
 
-KEYWORDS_FILE = "keywords.txt"
+# ---------------- CONFIG ----------------
 POSTS_DIR = "_posts"
+KEYWORDS_FILE = "keywords.txt"
 IMAGES_DIR = "images"
-MODEL = "models/gemini-1.5-flash"
 
-os.makedirs(POSTS_DIR, exist_ok=True)
-os.makedirs(IMAGES_DIR, exist_ok=True)
+MODEL_TEXT = "gemini-1.5-flash-002"   # ✅ VALID
+MODEL_IMAGE = "imagen-3.0-generate-001"
+
+# ---------------------------------------
 
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 
-def get_keyword():
+def get_next_keyword():
     with open(KEYWORDS_FILE, "r", encoding="utf-8") as f:
-        for line in f:
-            if "|" in line:
-                return line.strip(), [x.strip() for x in line.split("|")]
-    return None, None
+        lines = [l.strip() for l in f.readlines() if l.strip()]
 
+    if not lines:
+        print("❌ No keywords left")
+        return None
 
-def remove_keyword(line):
-    with open(KEYWORDS_FILE, "r", encoding="utf-8") as f:
-        lines = f.readlines()
+    keyword = lines[0]
+
     with open(KEYWORDS_FILE, "w", encoding="utf-8") as f:
-        for l in lines:
-            if l.strip() != line:
-                f.write(l)
+        f.write("\n".join(lines[1:]))
+
+    return keyword
 
 
-def generate_article(title, focus_kw, semantic_kw):
+def generate_article(title):
     prompt = f"""
 write an SEO-optimised blog on the title {title}. using the Focus keyword {focus_kw} and using LSI Keywords {semantic_kw}
 use the following
@@ -50,48 +49,50 @@ Rules:
 """
 
     response = client.models.generate_content(
-        model=MODEL,
-        contents=prompt,
+        model=MODEL_TEXT,
+        contents=prompt
     )
 
     return response.text
 
 
-def generate_image(text, path):
-    img = Image.new("RGB", (800, 1000), "#111111")  # 4:5 ratio
-    draw = ImageDraw.Draw(img)
-    wrapped = textwrap.fill(text, 22)
-    draw.text((40, 400), wrapped, fill="white")
-    img.save(path, "WEBP")
+def generate_image(title, filename):
+    response = client.models.generate_images(
+        model=MODEL_IMAGE,
+        prompt=f"Professional legal blog illustration for: {title}",
+        size="1024x1024"
+    )
+
+    image_bytes = response.generated_images[0].image.image_bytes
+    with open(filename, "wb") as f:
+        f.write(image_bytes)
 
 
 def main():
-    line, data = get_keyword()
-    if not data:
-        print("❌ No keywords left")
+    keyword = get_next_keyword()
+    if not keyword:
         return
 
-    title, focus_kw, permalink, semantic_kw = data
-    today = datetime.date.today().isoformat()
-
-    post_path = f"{POSTS_DIR}/{today}-{permalink}.md"
-    image_path = f"{IMAGES_DIR}/{permalink}.webp"
+    today = datetime.date.today().strftime("%Y-%m-%d")
+    slug = keyword.lower().replace(" ", "-")
+    post_path = f"{POSTS_DIR}/{today}-{slug}.md"
+    image_path = f"{IMAGES_DIR}/{slug}.webp"
 
     if os.path.exists(post_path):
         print("⚠️ Post already exists")
         return
 
-    print(f"🚀 Generating: {title}")
+    print(f"🚀 Generating article: {keyword}")
+    content = generate_article(keyword)
 
-    content = generate_article(title, focus_kw, semantic_kw)
-    generate_image(title, image_path)
+    print("🖼 Generating image")
+    generate_image(keyword, image_path)
 
     front_matter = f"""---
-title: "{title}"
+title: "{keyword}"
 date: {today}
 layout: post
-image: /images/{permalink}.webp
-tags: [{semantic_kw}]
+image: /{image_path}
 ---
 
 """
@@ -99,8 +100,7 @@ tags: [{semantic_kw}]
     with open(post_path, "w", encoding="utf-8") as f:
         f.write(front_matter + content)
 
-    remove_keyword(line)
-    print("✅ Post published")
+    print("✅ Post created successfully")
 
 
 if __name__ == "__main__":
