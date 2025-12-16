@@ -1,19 +1,29 @@
+
 import os
-from datetime import datetime
 import google.generativeai as genai
+from datetime import datetime
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# ---------------- CONFIG ----------------
 
-MODEL = genai.GenerativeModel("gemini-2.5-flash")
-POSTS_PER_DAY = 8
-POST_DIR = "_posts"
+KEYWORDS_FILE = "keywords.txt"
+POSTS_DIR = "_posts"
 
-with open("keywords.txt", "r") as f:
-    rows = [line.strip() for line in f if line.count("|") == 3]
+# Ensure posts directory exists
+os.makedirs(POSTS_DIR, exist_ok=True)
 
-today = datetime.utcnow().strftime("%Y-%m-%d")
+# Load Gemini API Key
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    raise Exception("❌ GEMINI_API_KEY not found")
 
-def generate_post(title, focus_kw, permalink, semantic_kw):
+genai.configure(api_key=GEMINI_API_KEY)
+
+# Stable & fast Gemini model
+model = genai.GenerativeModel("gemini-1.5-flash")
+
+# ---------------- FUNCTIONS ----------------
+
+def generate_blog_content(title, focus_kw, permalink, semantic_kw):
     prompt = f"""
 write an SEO-optimised blog on the title {title}. using the Focus keyword {focus_kw} and using LSI Keywords {semantic_kw}
 use the following
@@ -30,30 +40,51 @@ Rules:
 - Naturally include focused & semantic keywords
 """
 
-    response = MODEL.generate_content(prompt)
-    return response.text
+    response = model.generate_content(prompt)
+    return response.text.strip()
 
+# ---------------- MAIN ----------------
 
-for row in rows[:POSTS_PER_DAY]:
-    title, focus_kw, permalink, semantic_kw = [x.strip() for x in row.split("|")]
+with open(KEYWORDS_FILE, "r", encoding="utf-8") as f:
+    lines = [line.strip() for line in f if line.strip()]
 
-    filename = f"{POST_DIR}/{today}-{permalink}.md"
+for line in lines[:8]:  # Max 8 posts per run
+    try:
+        # Expected format:
+        # title,focus keyword,semantic keywords,permalink
+        title, focus_kw, permalink, semantic_kw = line.split(",", 3)
 
-    content = generate_post(title, focus_kw, permalink, semantic_kw)
+        date = datetime.utcnow()
+        date_str = date.strftime("%Y-%m-%d")
+        full_date = date.strftime("%Y-%m-%d %H:%M:%S +0000")
 
-    markdown = f"""---
+        filename = f"{POSTS_DIR}/{date_str}-{permalink}.md"
+
+        # Prevent duplicate posts
+        if os.path.exists(filename):
+            print(f"⏭️ Skipping existing post: {filename}")
+            continue
+
+        print(f"✍️ Generating: {title}")
+
+        content = generate_blog_content(title, focus_kw, permalink, semantic_kw)
+
+        front_matter = f"""---
+layout: post
 title: "{title}"
-permalink: /{permalink}/
-description: "{focus_kw.capitalize()} – complete guide, honest answers, and expert insights."
-date: {today}
-categories: blog
-keywords: [{semantic_kw}]
+date: {full_date}
+description: "{title} – complete guide and detailed explanation."
+tags: [{focus_kw}]
 ---
 
-{content}
 """
 
-    with open(filename, "w") as f:
-        f.write(markdown)
+        with open(filename, "w", encoding="utf-8") as post:
+            post.write(front_matter)
+            post.write(content)
 
-print("✅ 8 Gemini-powered SEO posts generated")
+        print(f"✅ Published: {filename}")
+
+    except Exception as e:
+        print(f"❌ Error processing line: {line}")
+        print(e)
