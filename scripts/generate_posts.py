@@ -76,7 +76,7 @@ Style:
 Composition:
 - Center subject
 - Topic-relevant
-- 16:9 ratio
+- 4:5 ratio
 """
 
 
