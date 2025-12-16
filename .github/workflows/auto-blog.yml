@@ -1,46 +1,43 @@
 name: Gemini AI Auto Blog Publisher
 
 on:
+  push:
+    branches: [ master ]     # ✅ run immediately on push
   schedule:
-    - cron: "0 */3 * * *"   # Runs every 3 hours = 8 posts/day
-  workflow_dispatch:
+    - cron: "0 */3 * * *"    # ✅ every 3 hours
+  workflow_dispatch:         # ✅ manual trigger
 
 jobs:
   publish:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout repository
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup Python
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      # 3️⃣ Install dependencies
       - name: Install dependencies
         run: |
-          pip install google-generativeai==0.5.4 pillow
+          pip install google-generativeai pillow
 
-      # 4️⃣ Generate blog posts + images
-      - name: Generate blog posts
+      - name: Generate blog post
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           python scripts/generate_posts.py
 
-      # 5️⃣ Commit & push changes
-      - name: Commit & Push
+      - name: Commit & Push changes
         run: |
           git config user.name "gemini-blog-bot"
           git config user.email "bot@github.com"
 
-          git add .
+          git add _posts images || true
 
-          TITLES=$(git diff --cached --name-only | grep "_posts/" | sed 's#.*/##' | sed 's/.md//g' | tr '\n' ', ')
+          TITLES=$(git diff --cached --name-only | grep "_posts/" | sed 's#.*/##' | sed 's/.md//' | tr '\n' ',')
 
-          git commit -m "🤖 Gemini published: ${TITLES}" || exit 0
+          git commit -m "📝 Gemini published: ${TITLES:-new post}" || exit 0
           git push origin master
