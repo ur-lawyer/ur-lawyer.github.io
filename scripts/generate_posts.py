@@ -191,7 +191,7 @@ title: "{title}"
 date: {today}
 layout: post
 image: /images/{permalink}.webp
-focus_keyword: "{focus}"
+focus_keyword: "{focus_kw}"
 tags: [{semantic}]
 ---
 
