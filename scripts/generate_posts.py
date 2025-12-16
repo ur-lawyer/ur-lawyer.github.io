@@ -9,7 +9,7 @@ KEYWORDS_FILE = "keywords.txt"
 POSTS_DIR = "_posts"
 IMAGES_DIR = "images"
 
-TEXT_MODEL = "gemini-1.5-flash"   # ✅ VALID MODEL
+TEXT_MODEL = "gemini-2.5-flash"   # ✅ VALID MODEL
 IMAGE_SIZE = (1024, 1280)
 # ==========================================
 
