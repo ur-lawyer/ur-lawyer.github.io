@@ -1,19 +1,9 @@
 ---
-title: "How Long Do Personal Injury Lawsuits Take? What You Need to Know"
-date: 2025-12-16
 layout: post
+title: "How Long Do Personal Injury Lawsuits Take? What You Need to Know"
+author: Mary
 image: /images/how-long-do-personal-injury-lawsuits-take.webp
-keywords: [Lawyer near me]
----
-
-```markdown
----
-layout: post
-title: "How Long Do Personal Injury Lawsuits Take? What You Need to Know"
-author: [Your Name/Company Name]
-date: [YYYY-MM-DD]
-categories: [Personal Injury, Lawsuit, Legal Advice]
-tags: [personal injury lawyer, personal injury lawsuit timeline, legal process, settlement, trial, lawyer near me, injury claim]
+tags: [Personal Injury]
 ---
 
 ## Understanding the Personal Injury Lawsuit Timeline: What to Expect
