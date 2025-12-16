@@ -1,34 +1,37 @@
+
 import os
 import datetime
 from google import genai
 from PIL import Image, ImageDraw
 
-# ---------------- CONFIG ----------------
+# ================= CONFIG =================
 KEYWORDS_FILE = "keywords.txt"
 POSTS_DIR = "_posts"
 IMAGES_DIR = "images"
 
-TEXT_MODEL = "gemini-1.5-flash-002"   # ✅ VALID MODEL
-IMAGE_SIZE = (1200, 630)
+TEXT_MODEL = "gemini-1.5-flash"   # ✅ VALID MODEL
+IMAGE_SIZE = (1024, 1280)
+# ==========================================
 
-# ---------------------------------------
+os.makedirs(POSTS_DIR, exist_ok=True)
+os.makedirs(IMAGES_DIR, exist_ok=True)
 
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
 
-def get_keyword():
+def get_keyword_row():
     with open(KEYWORDS_FILE, "r", encoding="utf-8") as f:
         lines = [l.strip() for l in f if l.strip()]
 
     if not lines:
         return None
 
-    keyword = lines[0]
+    row = lines[0]
 
     with open(KEYWORDS_FILE, "w", encoding="utf-8") as f:
         f.write("\n".join(lines[1:]))
 
-    return keyword
+    return row
 
 
 def generate_article(title, focus_kw, semantic_kw):
@@ -56,22 +59,27 @@ Rules:
     return response.text
 
 
-def generate_image(title, path):
-    img = Image.new("RGB", IMAGE_SIZE, "#f4f4f4")
+def generate_image(text, path):
+    img = Image.new("RGB", IMAGE_SIZE, "white")
     draw = ImageDraw.Draw(img)
-    draw.text((40, 250), title[:80], fill="#000")
+    draw.text((40, 280), text[:80], fill="black")
     img.save(path, "WEBP")
 
 
 def main():
-    data = get_keyword()
-    if not data:
+    row = get_keyword_row()
+    if not row:
         print("❌ No keywords left")
         return
 
-    title, focus_kw, permalink, semantic_kw = data.split("|")
+    try:
+        title, focus_kw, permalink, semantic_kw = [x.strip() for x in row.split("|")]
+    except ValueError:
+        print("❌ Invalid keyword format")
+        return
 
-    today = datetime.date.today().strftime("%Y-%m-%d")
+    today = datetime.date.today().isoformat()
+
     post_path = f"{POSTS_DIR}/{today}-{permalink}.md"
     image_path = f"{IMAGES_DIR}/{permalink}.webp"
 
