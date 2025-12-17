@@ -11,7 +11,7 @@ POSTS_DIR = "_posts"
 IMAGES_DIR = "images"
 
 TEXT_MODEL = "gemini-2.5-flash"
-FREEPIK_ENDPOINT = "https://api.freepik.com/v1/ai/mystic"
+FREEPIK_ENDPOINT = "https://api.freepik.com/v1/ai/text-to-image/flux-dev"
 
 os.makedirs(POSTS_DIR, exist_ok=True)
 os.makedirs(IMAGES_DIR, exist_ok=True)
@@ -94,7 +94,7 @@ def generate_image_freepik(prompt, output_path):
             "size": "1920x1080"
         },
         "resolution": "2k",
-        "aspect_ratio": "square_1_1",
+        "aspect_ratio": "widescreen_16_9",
         "model": "realism"
     }
 
