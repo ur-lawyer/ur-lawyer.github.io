@@ -7,7 +7,6 @@ KEYWORDS_FILE = "keywords.txt"
 POSTS_DIR = "_posts"
 IMAGES_DIR = "images"
 TEXT_MODEL = "gemini-2.5-flash"
-IMAGE_SIZE = (1920, 1080)
 
 os.makedirs(POSTS_DIR, exist_ok=True)
 os.makedirs(IMAGES_DIR, exist_ok=True)
@@ -70,8 +69,7 @@ Rules:
 
     response = client.models.generate_content(
         model=TEXT_MODEL,
-        contents=prompt,
-        size=IMAGE_SIZE
+        contents=prompt
     )
     return response.text.strip()
 
