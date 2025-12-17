@@ -27,6 +27,7 @@ jobs:
       - name: Generate blog post
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          FREEPIK_API_KEY: ${{ secrets.FREEPIK_API_KEY }}
         run: |
           python scripts/generate_posts.py
 
