@@ -84,7 +84,7 @@ Rules:
 
 def generate_image_freepik(prompt, output_path):
     headers = {
-        "X-Freepik-API-Key": FREEPIK_API_KEY,
+        "x-freepik-api-key": FREEPIK_API_KEY,
         "Content-Type": "application/json"
     }
     payload = {
@@ -92,7 +92,10 @@ def generate_image_freepik(prompt, output_path):
         "num_images": 1,
         "image": {
             "size": "1920x1080"
-        }
+        },
+        "resolution": "2k",
+        "aspect_ratio": "square_1_1",
+        "model": "realism"
     }
 
     response = requests.post(
