@@ -387,7 +387,7 @@ def main():
         print(f"✅ Post saved: {post_path}")
         
         # Construct the full URL for the post
-        post_url = f"https://ur-lawyer.github.io/{today.replace('-', '/')}/{permalink}/"
+        post_url = f"https://ur-lawyer.github.io/{permalink}/"
         
         print(f"\n{'=' * 60}")
         print("✅ SUCCESS! Post + Image Generated")
