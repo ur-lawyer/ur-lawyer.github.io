@@ -11,7 +11,7 @@ POSTS_DIR = "_posts"
 IMAGES_DIR = "images"
 
 TEXT_MODEL = "gemini-2.5-flash"
-FREEPIK_ENDPOINT = "https://api.freepik.com/v1/ai/image-generator"
+FREEPIK_ENDPOINT = "https://api.freepik.com/v1/ai/mystic"
 
 os.makedirs(POSTS_DIR, exist_ok=True)
 os.makedirs(IMAGES_DIR, exist_ok=True)
