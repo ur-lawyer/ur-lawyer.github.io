@@ -11,7 +11,7 @@ POSTS_DIR = "_posts"
 IMAGES_DIR = "images"
 
 TEXT_MODEL = "gemini-2.5-flash"
-FREEPIK_ENDPOINT = "FPSX272f590519068441ec2d0219e78d1817"
+FREEPIK_ENDPOINT = "https://api.freepik.com/v1/ai/text-to-image"
 
 os.makedirs(POSTS_DIR, exist_ok=True)
 os.makedirs(IMAGES_DIR, exist_ok=True)
