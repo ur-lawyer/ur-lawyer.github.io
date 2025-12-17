@@ -60,3 +60,6 @@ Rules:
 - use author: Mary
 - do not add tags only categories as {focus_kw}
 - use image as image: '/images/{permalink}.webp'
+
+
+How Long Do Personal Injury Lawsuits Take? What You Need to Know | personal injury lawyer | how-long-do-personal-injury-lawsuits-take | Lawyer near me

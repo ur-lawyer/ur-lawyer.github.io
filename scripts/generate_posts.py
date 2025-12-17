@@ -13,8 +13,12 @@ from googleapiclient.discovery import build
 KEYWORDS_FILE = "keywords.txt"
 POSTS_DIR = "_posts"
 IMAGES_DIR = "images"
+SITE_DOMAIN = "https://ur-lawyer.github.io"
 TEXT_MODEL = "gemini-2.5-flash"
 FREEPIK_ENDPOINT = "https://api.freepik.com/v1/ai/text-to-image/flux-dev"
+
+# How many posts to generate per run (default: 1)
+POSTS_PER_RUN = 1  # Change to 2, 3, etc. to process multiple keywords
 
 os.makedirs(POSTS_DIR, exist_ok=True)
 os.makedirs(IMAGES_DIR, exist_ok=True)
@@ -47,26 +51,22 @@ def get_keyword_row():
 def generate_article(title, focus_kw, permalink, semantic_kw):
     """Generate blog article using Gemini"""
     prompt = f"""
-Write an SEO-optimised blog post with the title: {title}
+write an SEO-optimised blog on the title {title}. using the Focus keyword {focus_kw} and using LSI Keywords {semantic_kw}
+use the following
 
-Requirements:
-- Focus keyword: {focus_kw}
-- LSI Keywords: {semantic_kw}
-- Simple English, max 3 sentences per paragraph
-- use reaquired links of other law related sites.
+Rules:
+- Simple English
+- Max 3 sentences per paragraph
 - Use "you" to address the reader
 - Include practical examples related to {focus_kw}
-- Use H2, H3, H4, H5, H6 headings (NO H1)
-- Include lists, tables, and other data formats
-- Write 2000+ words
-- Jekyll markdown format with frontmatter
-- author: Mary
-- categories: [{focus_kw}]
-- image: '/images/{permalink}.webp'
-- description: in 160 characters or less.
-- Naturally incorporate focus & semantic keywords
-
-Format the response as a complete Jekyll markdown file with YAML frontmatter.
+- Use H2 and H3, h4, h5, h6 headings, no H1
+- Use lists, tables, snippets, and other data formats
+- Write more than 2000 words
+- Write in Jekyll markdown format
+- Naturally include focused & semantic keywords
+- use author: Mary
+- do not add tags only categories as {focus_kw}
+- use image as image: '/images/{permalink}.webp'
 """
     
     print("🤖 Generating article with Gemini...")
@@ -322,110 +322,137 @@ def main():
     else:
         print("✅ FREEPIK_API_KEY found")
     
-    # Get next keyword
-    row = get_keyword_row()
-    if not row:
-        print("❌ No keywords left in keywords.txt")
-        return
+    print(f"\n📊 Posts to generate this run: {POSTS_PER_RUN}")
     
-    print(f"\n📋 Processing keyword row:")
-    print(f"   {row}")
+    # Process multiple keywords based on POSTS_PER_RUN
+    posts_generated = 0
     
-    # Parse keyword row
-    try:
-        parts = [x.strip() for x in row.split("|")]
-        if len(parts) != 4:
-            print(f"❌ Invalid format. Expected 4 fields, got {len(parts)}")
-            print(f"   Format: Title | Focus KW | Permalink | Semantic KW")
-            return
+    for post_num in range(1, POSTS_PER_RUN + 1):
+        print(f"\n{'=' * 60}")
+        print(f"📝 Processing Post {post_num}/{POSTS_PER_RUN}")
+        print("=" * 60)
         
-        title, focus_kw, permalink, semantic_kw = parts
-        print(f"\n✅ Parsed successfully:")
-        print(f"   📰 Title: {title}")
-        print(f"   🎯 Focus KW: {focus_kw}")
-        print(f"   🔗 Permalink: {permalink}")
-        print(f"   🏷️  Semantic KW: {semantic_kw}")
-    except ValueError as e:
-        print(f"❌ Error parsing keyword: {e}")
-        return
+        # Get next keyword
+        row = get_keyword_row()
+        if not row:
+            print(f"❌ No more keywords left in keywords.txt")
+            if posts_generated == 0:
+                print("⚠️ No posts were generated this run")
+            else:
+                print(f"✅ Generated {posts_generated} post(s) before running out of keywords")
+            break
+        
+        print(f"\n📋 Processing keyword row:")
+        print(f"   {row}")
+        
+        # Parse keyword row
+        try:
+            parts = [x.strip() for x in row.split("|")]
+            if len(parts) != 4:
+                print(f"❌ Invalid format. Expected 4 fields, got {len(parts)}")
+                print(f"   Format: Title | Focus KW | Permalink | Semantic KW")
+                continue
+            
+            title, focus_kw, permalink, semantic_kw = parts
+            print(f"\n✅ Parsed successfully:")
+            print(f"   📰 Title: {title}")
+            print(f"   🎯 Focus KW: {focus_kw}")
+            print(f"   🔗 Permalink: {permalink}")
+            print(f"   🏷️  Semantic KW: {semantic_kw}")
+        except ValueError as e:
+            print(f"❌ Error parsing keyword: {e}")
+            continue
+        
+        # Generate file paths
+        today = datetime.date.today().isoformat()
+        post_path = f"{POSTS_DIR}/{today}-{permalink}.md"
+        image_file = f"{IMAGES_DIR}/{permalink}.webp"
+        
+        # Check if post already exists
+        if os.path.exists(post_path):
+            print(f"\n⚠️  Post already exists: {post_path}")
+            print(f"   Skipping to next keyword...")
+            continue
+        
+        print(f"\n📝 Output files:")
+        print(f"   Post: {post_path}")
+        print(f"   Image: {image_file}")
+        
+        # Generate content
+        try:
+            print(f"\n{'=' * 60}")
+            print("Step 1: Generating Article")
+            print("=" * 60)
+            article = generate_article(title, focus_kw, permalink, semantic_kw)
+            print(f"✅ Article generated ({len(article)} characters)")
+            
+            print(f"\n{'=' * 60}")
+            print("Step 2: Generating Image Prompt")
+            print("=" * 60)
+            image_prompt = generate_image_prompt(title)
+            print(f"✅ Image prompt generated")
+            
+            print(f"\n{'=' * 60}")
+            print("Step 3: Generating Image via Freepik AI")
+            print("=" * 60)
+            generate_image_freepik(image_prompt, image_file)
+            
+            print(f"\n{'=' * 60}")
+            print("Step 4: Saving Post")
+            print("=" * 60)
+            with open(post_path, "w", encoding="utf-8") as f:
+                f.write(article)
+            print(f"✅ Post saved: {post_path}")
+            
+            # Construct the full URL for the post
+            post_url = f"{SITE_DOMAIN}/{permalink}/"
+            
+            print(f"\n{'=' * 60}")
+            print(f"✅ SUCCESS! Post {post_num} Generated")
+            print("=" * 60)
+            print(f"📰 Title: {title}")
+            print(f"📄 File: {post_path}")
+            print(f"🖼️  Image: {image_file}")
+            print(f"🌐 URL: {post_url}")
+            
+            posts_generated += 1
+            
+            # Wait 5 minutes before submitting to Google (only for the last post)
+            if post_num == POSTS_PER_RUN or post_num == posts_generated:
+                print(f"\n{'=' * 60}")
+                print("Step 5: Waiting 5 minutes before submitting to Google")
+                print("=" * 60)
+                print("⏳ This allows GitHub Pages to deploy the post(s) first...")
+                
+                # Wait 5 minutes (300 seconds)
+                wait_time = 300
+                for remaining in range(wait_time, 0, -30):
+                    minutes = remaining // 60
+                    seconds = remaining % 60
+                    print(f"⏰ Time remaining: {minutes}m {seconds}s", end='\r')
+                    time.sleep(30)
+                
+                print(f"\n✅ Wait complete!")
+                
+                print(f"\n{'=' * 60}")
+                print("Step 6: Submitting to Google Search Console")
+                print("=" * 60)
+                
+                submit_to_google_indexing(post_url)
+            
+        except Exception as e:
+            print(f"\n{'=' * 60}")
+            print(f"❌ FAILED: {e}")
+            print("=" * 60)
+            print(f"⚠️ Continuing to next keyword...")
+            continue
     
-    # Generate file paths
-    today = datetime.date.today().isoformat()
-    post_path = f"{POSTS_DIR}/{today}-{permalink}.md"
-    image_file = f"{IMAGES_DIR}/{permalink}.webp"
-    
-    # Check if post already exists
-    if os.path.exists(post_path):
-        print(f"\n⚠️  Post already exists: {post_path}")
-        return
-    
-    print(f"\n📝 Output files:")
-    print(f"   Post: {post_path}")
-    print(f"   Image: {image_file}")
-    
-    # Generate content
-    try:
-        print(f"\n{'=' * 60}")
-        print("Step 1: Generating Article")
-        print("=" * 60)
-        article = generate_article(title, focus_kw, permalink, semantic_kw)
-        print(f"✅ Article generated ({len(article)} characters)")
-        
-        print(f"\n{'=' * 60}")
-        print("Step 2: Generating Image Prompt")
-        print("=" * 60)
-        image_prompt = generate_image_prompt(title)
-        print(f"✅ Image prompt generated")
-        
-        print(f"\n{'=' * 60}")
-        print("Step 3: Generating Image via Freepik AI")
-        print("=" * 60)
-        generate_image_freepik(image_prompt, image_file)
-        
-        print(f"\n{'=' * 60}")
-        print("Step 4: Saving Post")
-        print("=" * 60)
-        with open(post_path, "w", encoding="utf-8") as f:
-            f.write(article)
-        print(f"✅ Post saved: {post_path}")
-        
-        # Construct the full URL for the post
-        post_url = f"https://ur-lawyer.github.io/{permalink}/"
-        
-        print(f"\n{'=' * 60}")
-        print("✅ SUCCESS! Post + Image Generated")
-        print("=" * 60)
-        print(f"📰 Title: {title}")
-        print(f"📄 File: {post_path}")
-        print(f"🖼️  Image: {image_file}")
-        print(f"🌐 URL: {post_url}")
-        
-        print(f"\n{'=' * 60}")
-        print("Step 5: Waiting 5 minutes before submitting to Google")
-        print("=" * 60)
-        print("⏳ This allows GitHub Pages to deploy the post first...")
-        
-        # Wait 5 minutes (300 seconds)
-        wait_time = 300
-        for remaining in range(wait_time, 0, -30):
-            minutes = remaining // 60
-            seconds = remaining % 60
-            print(f"⏰ Time remaining: {minutes}m {seconds}s", end='\r')
-            time.sleep(30)  # Update every 30 seconds
-        
-        print(f"\n✅ Wait complete!")
-        
-        print(f"\n{'=' * 60}")
-        print("Step 6: Submitting to Google Search Console")
-        print("=" * 60)
-        
-        submit_to_google_indexing(post_url)
-        
-    except Exception as e:
-        print(f"\n{'=' * 60}")
-        print(f"❌ FAILED: {e}")
-        print("=" * 60)
-        raise
+    # Final summary
+    print(f"\n{'=' * 60}")
+    print("🎉 WORKFLOW COMPLETE")
+    print("=" * 60)
+    print(f"✅ Posts generated this run: {posts_generated}")
+    print(f"📊 Keywords remaining: Check keywords.txt")
 
 if __name__ == "__main__":
     main()
