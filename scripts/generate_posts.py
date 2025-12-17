@@ -53,6 +53,7 @@ Requirements:
 - Focus keyword: {focus_kw}
 - LSI Keywords: {semantic_kw}
 - Simple English, max 3 sentences per paragraph
+- use reaquired links of other law related sites.
 - Use "you" to address the reader
 - Include practical examples related to {focus_kw}
 - Use H2, H3, H4, H5, H6 headings (NO H1)
