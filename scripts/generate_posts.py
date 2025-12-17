@@ -119,7 +119,7 @@ def main():
 
     print(f"📝 Generating post: {title}")
 
-    content = generate_article(title, focus_kw, semantic_kw)
+    content = generate_article(title, focus_kw, permalink, semantic_kw)
     generate_image(title, image_path)
 
 

@@ -39,5 +39,5 @@ jobs:
 
           TITLES=$(git diff --cached --name-only | grep "_posts/" | sed 's#.*/##' | sed 's/.md//' | tr '\n' ',')
 
-          git commit -m "📝 Gemini published: ${TITLES:-new post}" || exit 0
+          git commit -m "${TITLES:-new post}" || exit 0
           git push origin master
