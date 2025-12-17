@@ -53,7 +53,7 @@ Rules:
 - Include practical examples related to {focus_kw}
 - Use H2 and H3, h4, h5, h6 headings, no H1
 - Use lists, tables, snippets, and other data formats
-- Write more than 2000 words
+- Write more than 1500 words
 - Write in Jekyll markdown format
 - Naturally include focused & semantic keywords
 - use author: Mary
@@ -111,7 +111,8 @@ def generate_image_freepik(prompt, output_path):
         "num_images": 1,
         "image": {
             "size": "1920x1080"
-        }
+        },
+        "aspect_ratio": "widescreen_16_9"
     }
     
     print(f"📤 Sending request to Freepik API...")
