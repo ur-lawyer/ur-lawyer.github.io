@@ -11,7 +11,7 @@ POSTS_DIR = "_posts"
 IMAGES_DIR = "images"
 
 TEXT_MODEL = "gemini-2.5-flash"
-FREEPIK_ENDPOINT = "https://api.freepik.com/v1/ai/text-to-image"
+FREEPIK_ENDPOINT = "https://api.freepik.com/v1/ai/image-generator"
 
 os.makedirs(POSTS_DIR, exist_ok=True)
 os.makedirs(IMAGES_DIR, exist_ok=True)
@@ -84,10 +84,9 @@ Rules:
 
 def generate_image_freepik(prompt, output_path):
     headers = {
-        "Authorization": f"Bearer {FREEPIK_API_KEY}",
+        "X-Freepik-API-Key": FREEPIK_API_KEY,
         "Content-Type": "application/json"
     }
-
     payload = {
         "prompt": prompt,
         "num_images": 1,
