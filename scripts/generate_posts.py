@@ -62,6 +62,7 @@ Requirements:
 - author: Mary
 - categories: [{focus_kw}]
 - image: '/images/{permalink}.webp'
+- description: in 160 characters or less.
 - Naturally incorporate focus & semantic keywords
 
 Format the response as a complete Jekyll markdown file with YAML frontmatter.
