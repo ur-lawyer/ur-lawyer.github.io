@@ -162,8 +162,9 @@ def generate_image_freepik(prompt, output_path):
             
             print(f"🔄 Polling attempt {attempt}/{max_attempts}...")
             
-            # Get task status
-            status_url = f"https://api.freepik.com/v1/ai/text-to-image/{task_id}"
+            # Get task status - correct endpoint format
+            status_url = f"https://api.freepik.com/v1/ai/text-to-image/flux-dev/{task_id}"
+            print(f"🔍 Checking status at: {status_url}")
             status_response = requests.get(
                 status_url,
                 headers={"x-freepik-api-key": FREEPIK_API_KEY},
@@ -173,6 +174,7 @@ def generate_image_freepik(prompt, output_path):
             status_response.raise_for_status()
             status_data = status_response.json()
             
+            print(f"📊 Full status response: {status_data}")
             print(f"📊 Status: {status_data.get('data', {}).get('status', 'UNKNOWN')}")
             
             # Check if generation is complete
