@@ -123,7 +123,8 @@ def generate_image_freepik(prompt, output_path):
         "num_images": 1,
         "image": {
             "size": "1920x1080"  # 16:9 aspect ratio
-        }
+        },
+        "aspect_ratio": "widescreen_16_9"
     }
     
     print(f"📤 Sending request to Freepik API...")
