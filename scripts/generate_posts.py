@@ -1,9 +1,13 @@
 import os
 import datetime
 import requests
+import time
+import json
 from io import BytesIO
 from PIL import Image
 from google import genai
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
 
 # ---------------- CONFIG ----------------
 KEYWORDS_FILE = "keywords.txt"
@@ -43,22 +47,24 @@ def get_keyword_row():
 def generate_article(title, focus_kw, permalink, semantic_kw):
     """Generate blog article using Gemini"""
     prompt = f"""
-write an SEO-optimised blog on the title {title}. using the Focus keyword {focus_kw} and using LSI Keywords {semantic_kw}
-use the following
+Write an SEO-optimised blog post with the title: {title}
 
-Rules:
-- Simple English
-- Max 3 sentences per paragraph
+Requirements:
+- Focus keyword: {focus_kw}
+- LSI Keywords: {semantic_kw}
+- Simple English, max 3 sentences per paragraph
 - Use "you" to address the reader
 - Include practical examples related to {focus_kw}
-- Use H2 and H3, h4, h5, h6 headings, no H1
-- Use lists, tables, snippets, and other data formats
-- Write more than 1500 words
-- Write in Jekyll markdown format
-- Naturally include focused & semantic keywords
-- use author: Mary
-- do not add tags only categories as {focus_kw}
-- use image as image: '/images/{permalink}.webp'
+- Use H2, H3, H4, H5, H6 headings (NO H1)
+- Include lists, tables, and other data formats
+- Write 2000+ words
+- Jekyll markdown format with frontmatter
+- author: Mary
+- categories: [{focus_kw}]
+- image: '/images/{permalink}.webp'
+- Naturally incorporate focus & semantic keywords
+
+Format the response as a complete Jekyll markdown file with YAML frontmatter.
 """
     
     print("🤖 Generating article with Gemini...")
@@ -105,14 +111,18 @@ def generate_image_freepik(prompt, output_path):
         "Content-Type": "application/json"
     }
     
-    # Simplified payload
+    # Image size options (all 16:9 aspect ratio):
+    # "1920x1080" - Full HD (default)
+    # "1280x720"  - HD (faster, smaller file)
+    # "2560x1440" - 2K (higher quality)
+    # "3840x2160" - 4K (best quality, slower)
+    
     payload = {
         "prompt": prompt,
         "num_images": 1,
         "image": {
-            "size": "1920x1080"
-        },
-        "aspect_ratio": "widescreen_16_9"
+            "size": "1920x1080"  # 16:9 aspect ratio
+        }
     }
     
     print(f"📤 Sending request to Freepik API...")
@@ -243,6 +253,53 @@ def generate_image_freepik(prompt, output_path):
         print(f"❌ Error: {e}")
         raise
 
+def submit_to_google_indexing(url):
+    """
+    Submit URL to Google Indexing API for immediate crawling
+    """
+    credentials_json = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
+    
+    if not credentials_json:
+        print("⚠️ GOOGLE_SERVICE_ACCOUNT_JSON not found - skipping Google indexing")
+        print("💡 Add this secret in GitHub Settings → Secrets to enable auto-indexing")
+        return False
+    
+    try:
+        print(f"🔐 Parsing service account credentials...")
+        credentials_info = json.loads(credentials_json)
+        
+        print(f"📝 Creating credentials object...")
+        credentials = service_account.Credentials.from_service_account_info(
+            credentials_info,
+            scopes=['https://www.googleapis.com/auth/indexing']
+        )
+        
+        print(f"🔧 Building Google Indexing API service...")
+        service = build('indexing', 'v3', credentials=credentials)
+        
+        body = {
+            'url': url,
+            'type': 'URL_UPDATED'
+        }
+        
+        print(f"📤 Submitting URL to Google Search Console: {url}")
+        response = service.urlNotifications().publish(body=body).execute()
+        
+        print(f"✅ Successfully submitted to Google!")
+        print(f"📋 Response: {response}")
+        return True
+        
+    except json.JSONDecodeError as e:
+        print(f"❌ Invalid JSON in GOOGLE_SERVICE_ACCOUNT_JSON: {e}")
+        return False
+    except Exception as e:
+        print(f"❌ Error submitting to Google: {e}")
+        print(f"💡 Make sure:")
+        print(f"   1. Indexing API is enabled in Google Cloud Console")
+        print(f"   2. Service account email is added as owner in Search Console")
+        print(f"   3. JSON credentials are valid")
+        return False
+
 # ---------------- MAIN ----------------
 def main():
     print("=" * 60)
@@ -329,12 +386,37 @@ def main():
             f.write(article)
         print(f"✅ Post saved: {post_path}")
         
+        # Construct the full URL for the post
+        post_url = f"https://ur-lawyer.github.io/{today.replace('-', '/')}/{permalink}/"
+        
         print(f"\n{'=' * 60}")
-        print("✅ SUCCESS! Post + Image published")
+        print("✅ SUCCESS! Post + Image Generated")
         print("=" * 60)
         print(f"📰 Title: {title}")
         print(f"📄 File: {post_path}")
         print(f"🖼️  Image: {image_file}")
+        print(f"🌐 URL: {post_url}")
+        
+        print(f"\n{'=' * 60}")
+        print("Step 5: Waiting 5 minutes before submitting to Google")
+        print("=" * 60)
+        print("⏳ This allows GitHub Pages to deploy the post first...")
+        
+        # Wait 5 minutes (300 seconds)
+        wait_time = 300
+        for remaining in range(wait_time, 0, -30):
+            minutes = remaining // 60
+            seconds = remaining % 60
+            print(f"⏰ Time remaining: {minutes}m {seconds}s", end='\r')
+            time.sleep(30)  # Update every 30 seconds
+        
+        print(f"\n✅ Wait complete!")
+        
+        print(f"\n{'=' * 60}")
+        print("Step 6: Submitting to Google Search Console")
+        print("=" * 60)
+        
+        submit_to_google_indexing(post_url)
         
     except Exception as e:
         print(f"\n{'=' * 60}")

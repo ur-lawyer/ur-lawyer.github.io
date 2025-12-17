@@ -22,12 +22,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install --upgrade google-genai pillow
+          pip install google-genai pillow requests google-auth google-api-python-client
 
       - name: Generate blog post
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           FREEPIK_API_KEY: ${{ secrets.FREEPIK_API_KEY }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
         run: |
           python scripts/generate_posts.py
 
