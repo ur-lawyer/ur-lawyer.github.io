@@ -1,33 +1,27 @@
-
 import os
-import base64
-from datetime import date
+import datetime
 from google import genai
-from PIL import Image, ImageDraw
 
-# ================= CONFIG =================
+# ---------------- CONFIG ----------------
 KEYWORDS_FILE = "keywords.txt"
 POSTS_DIR = "_posts"
 IMAGES_DIR = "images"
-
-TEXT_MODEL = "gemini-2.5-flash"   # ✅ VALID MODEL
-IMAGE_SIZE = (1024, 1280)
+TEXT_MODEL = "gemini-2.5-flash"
+IMAGE_SIZE = (1920, 1080)
 
 os.makedirs(POSTS_DIR, exist_ok=True)
 os.makedirs(IMAGES_DIR, exist_ok=True)
 
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
-# ================= HELPERS =================
+# ---------------- HELPERS ----------------
 def get_keyword_row():
     with open(KEYWORDS_FILE, "r", encoding="utf-8") as f:
         lines = [l.strip() for l in f if l.strip()]
-
     if not lines:
         return None
 
     row = lines.pop(0)
-
     with open(KEYWORDS_FILE, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
 
@@ -62,41 +56,27 @@ Rules:
 
 
 def generate_image_prompt(title):
-    return f"""
-Ultra high-quality blog cover image for:
-"{title}"
+    prompt = f"""
+Create a detailed AI image prompt for a blog featured image.
 
-Style:
-- Professional blog hero image
-- Clean, modern, premium
-- Cinematic lighting
-- High contrast
-- No text or letters
+Blog Title: {title}
 
-Composition:
-- Center subject
-- Topic-relevant
-- 4:5 ratio
+Rules:
+- Photorealistic
+- Professional blog style
+- No text in image
+- 16:9 composition
 """
 
-
-def generate_image(title, image_path):
-    prompt = generate_image_prompt(title)
-
-    img = client.images.generate(
-        model="gpt-image-1",
-        prompt=prompt,
+    response = client.models.generate_content(
+        model=TEXT_MODEL,
+        contents=prompt,
         size=IMAGE_SIZE
     )
-
-    image_base64 = img.data[0].b64_json
-    image_bytes = base64.b64decode(image_base64)
-
-    with open(image_path, "wb") as f:
-        f.write(image_bytes)
+    return response.text.strip()
 
 
-# ================= MAIN =================
+# ---------------- MAIN ----------------
 def main():
     row = get_keyword_row()
     if not row:
@@ -109,24 +89,34 @@ def main():
         print("❌ Invalid keyword format")
         return
 
-    today = date.today().isoformat()
+    today = datetime.date.today().isoformat()
     post_path = f"{POSTS_DIR}/{today}-{permalink}.md"
-    image_path = f"{IMAGES_DIR}/{permalink}.webp"
+    image_path = f"/images/{permalink}.webp"
 
     if os.path.exists(post_path):
         print("⚠️ Post already exists")
         return
 
-    print(f"📝 Generating post: {title}")
+    print(f"✍️ Generating post: {title}")
 
-    content = generate_article(title, focus_kw, permalink, semantic_kw)
-    generate_image(title, image_path)
+    article = generate_article(title, focus_kw, permalink, semantic_kw)
+    image_prompt = generate_image_prompt(title)
 
+    front_matter = f"""---
+title: "{title}"
+date: {today}
+image: {image_path}
+focus_keyword: "{focus_kw}"
+semantic_keywords: "{semantic_kw}"
+image_prompt: "{image_prompt}"
+---
+
+"""
 
     with open(post_path, "w", encoding="utf-8") as f:
-        f.write(content)
+        f.write(article)
 
-    print("✅ Post & image generated successfully")
+    print("✅ Post generated successfully")
 
 
 if __name__ == "__main__":
