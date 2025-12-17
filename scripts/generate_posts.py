@@ -92,7 +92,9 @@ Return ONLY the image prompt, nothing else.
     return response.text.strip()
 
 def generate_image_freepik(prompt, output_path):
-    """Generate image using Freepik AI"""
+    """Generate image using Freepik AI with polling"""
+    import time
+    
     if not FREEPIK_API_KEY:
         raise ValueError("❌ FREEPIK_API_KEY environment variable is not set")
     
@@ -103,7 +105,7 @@ def generate_image_freepik(prompt, output_path):
         "Content-Type": "application/json"
     }
     
-    # Simplified payload for better compatibility
+    # Simplified payload
     payload = {
         "prompt": prompt,
         "num_images": 1,
@@ -116,68 +118,106 @@ def generate_image_freepik(prompt, output_path):
     print(f"📝 Prompt: {prompt[:100]}...")
     
     try:
+        # Step 1: Submit generation request
         response = requests.post(
             FREEPIK_ENDPOINT,
             headers=headers,
             json=payload,
-            timeout=180  # 3 minutes timeout
+            timeout=60
         )
         
         print(f"📥 Response status: {response.status_code}")
         
         if response.status_code == 401:
             print(f"❌ Authentication failed")
-            print(f"Response: {response.text}")
-            raise Exception("Invalid Freepik API key. Verify at https://www.freepik.com/api")
+            raise Exception("Invalid Freepik API key")
         
         if response.status_code == 402:
-            print(f"❌ Payment required")
             raise Exception("Freepik API credits exhausted")
-        
-        if response.status_code == 400:
-            print(f"❌ Bad request")
-            print(f"Response: {response.text}")
-            raise Exception(f"Invalid parameters: {response.text}")
         
         response.raise_for_status()
         
-        # Parse response
+        # Parse initial response
         data = response.json()
-        print(f"📦 Response keys: {list(data.keys())}")
+        print(f"📦 Response: {data}")
         
-        # Try to find image URL in different response formats
-        image_url = None
+        # Extract task_id from response
+        task_id = None
+        if "data" in data and isinstance(data["data"], dict):
+            task_id = data["data"].get("task_id")
         
-        if isinstance(data, dict):
-            # Format 1: {"data": [{"url": "..."}]}
-            if "data" in data and isinstance(data["data"], list) and len(data["data"]) > 0:
-                image_url = data["data"][0].get("url")
-            # Format 2: {"data": {"url": "..."}}
-            elif "data" in data and isinstance(data["data"], dict):
-                image_url = data["data"].get("url")
-            # Format 3: {"url": "..."}
-            elif "url" in data:
-                image_url = data["url"]
-            # Format 4: {"image": "..."}
-            elif "image" in data:
-                image_url = data["image"]
+        if not task_id:
+            raise Exception(f"No task_id in response: {data}")
         
-        if not image_url:
-            print(f"❌ Could not find image URL in response")
-            print(f"Full response: {data}")
-            raise Exception(f"Unexpected API response structure: {data}")
+        print(f"🎫 Task ID: {task_id}")
+        print(f"⏳ Polling for result (this may take 30-60 seconds)...")
         
-        print(f"🖼️ Image URL found: {image_url[:50]}...")
-        print(f"📥 Downloading image...")
+        # Step 2: Poll for result
+        max_attempts = 40  # 40 attempts × 5 seconds = 200 seconds (3+ minutes)
+        attempt = 0
         
-        img_response = requests.get(image_url, timeout=60)
-        img_response.raise_for_status()
+        while attempt < max_attempts:
+            attempt += 1
+            time.sleep(5)  # Wait 5 seconds between polls
+            
+            print(f"🔄 Polling attempt {attempt}/{max_attempts}...")
+            
+            # Get task status
+            status_url = f"https://api.freepik.com/v1/ai/text-to-image/{task_id}"
+            status_response = requests.get(
+                status_url,
+                headers={"x-freepik-api-key": FREEPIK_API_KEY},
+                timeout=30
+            )
+            
+            status_response.raise_for_status()
+            status_data = status_response.json()
+            
+            print(f"📊 Status: {status_data.get('data', {}).get('status', 'UNKNOWN')}")
+            
+            # Check if generation is complete
+            if "data" in status_data and isinstance(status_data["data"], dict):
+                status = status_data["data"].get("status")
+                
+                if status == "COMPLETED":
+                    # Extract image URL
+                    generated = status_data["data"].get("generated", {})
+                    images = generated.get("images", [])
+                    
+                    if images and len(images) > 0:
+                        image_url = images[0].get("url")
+                        
+                        if image_url:
+                            print(f"✅ Generation complete!")
+                            print(f"🖼️ Image URL: {image_url[:60]}...")
+                            print(f"📥 Downloading image...")
+                            
+                            img_response = requests.get(image_url, timeout=60)
+                            img_response.raise_for_status()
+                            
+                            print(f"💾 Converting and saving image...")
+                            img = Image.open(BytesIO(img_response.content)).convert("RGB")
+                            img.save(output_path, "WEBP", quality=85)
+                            
+                            print(f"✅ Image saved: {output_path}")
+                            return
+                        else:
+                            raise Exception("No URL in completed response")
+                    else:
+                        raise Exception("No images in completed response")
+                
+                elif status == "FAILED":
+                    error_msg = status_data["data"].get("error", "Unknown error")
+                    raise Exception(f"Generation failed: {error_msg}")
+                
+                elif status in ["CREATED", "PROCESSING"]:
+                    # Still processing, continue polling
+                    continue
+                else:
+                    raise Exception(f"Unknown status: {status}")
         
-        print(f"💾 Converting and saving image...")
-        img = Image.open(BytesIO(img_response.content)).convert("RGB")
-        img.save(output_path, "WEBP", quality=85)
-        
-        print(f"✅ Image saved: {output_path}")
+        # Timeout after max attempts
+        raise Exception(f"Generation timeout after {max_attempts * 5} seconds")
         
     except requests.exceptions.Timeout:
         print(f"❌ Request timed out")
