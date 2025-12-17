@@ -183,30 +183,38 @@ def generate_image_freepik(prompt, output_path):
                 
                 if status == "COMPLETED":
                     # Extract image URL
-                    generated = status_data["data"].get("generated", {})
-                    images = generated.get("images", [])
+                    generated = status_data["data"].get("generated", [])
                     
-                    if images and len(images) > 0:
-                        image_url = images[0].get("url")
-                        
-                        if image_url:
-                            print(f"✅ Generation complete!")
-                            print(f"🖼️ Image URL: {image_url[:60]}...")
-                            print(f"📥 Downloading image...")
-                            
-                            img_response = requests.get(image_url, timeout=60)
-                            img_response.raise_for_status()
-                            
-                            print(f"💾 Converting and saving image...")
-                            img = Image.open(BytesIO(img_response.content)).convert("RGB")
-                            img.save(output_path, "WEBP", quality=85)
-                            
-                            print(f"✅ Image saved: {output_path}")
-                            return
+                    # Check if generated is a list of URLs directly
+                    if isinstance(generated, list) and len(generated) > 0:
+                        # Direct list of URLs
+                        image_url = generated[0] if isinstance(generated[0], str) else generated[0].get("url")
+                    # Or if it's a dict with images key
+                    elif isinstance(generated, dict):
+                        images = generated.get("images", [])
+                        if images and len(images) > 0:
+                            image_url = images[0].get("url") if isinstance(images[0], dict) else images[0]
                         else:
-                            raise Exception("No URL in completed response")
+                            image_url = None
                     else:
-                        raise Exception("No images in completed response")
+                        image_url = None
+                    
+                    if image_url:
+                        print(f"✅ Generation complete!")
+                        print(f"🖼️ Image URL: {image_url[:60]}...")
+                        print(f"📥 Downloading image...")
+                        
+                        img_response = requests.get(image_url, timeout=60)
+                        img_response.raise_for_status()
+                        
+                        print(f"💾 Converting and saving image...")
+                        img = Image.open(BytesIO(img_response.content)).convert("RGB")
+                        img.save(output_path, "WEBP", quality=85)
+                        
+                        print(f"✅ Image saved: {output_path}")
+                        return
+                    else:
+                        raise Exception(f"No URL found in completed response: {status_data}")
                 
                 elif status == "FAILED":
                     error_msg = status_data["data"].get("error", "Unknown error")

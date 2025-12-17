@@ -42,3 +42,21 @@ Style rules:
     print(f"🖼️ Image generated: {image_path}")
 
     return f"/images/{permalink}.webp"
+
+
+write an SEO-optimised blog on the title {title}. using the Focus keyword {focus_kw} and using LSI Keywords {semantic_kw}
+use the following
+
+Rules:
+- Simple English
+- Max 3 sentences per paragraph
+- Use "you" to address the reader
+- Include practical examples related to {focus_kw}
+- Use H2 and H3, h4, h5, h6 headings, no H1
+- Use lists, tables, snippets, and other data formats
+- Write more than 2000 words
+- Write in Jekyll markdown format
+- Naturally include focused & semantic keywords
+- use author: Mary
+- do not add tags only categories as {focus_kw}
+- use image as image: '/images/{permalink}.webp'
