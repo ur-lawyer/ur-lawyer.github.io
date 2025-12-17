@@ -1,40 +1,38 @@
 import os
 import datetime
-import urllib.parse
 import requests
 from io import BytesIO
 from PIL import Image
-import google.generativeai as genai
+from google import genai
 
-# ================= CONFIG =================
+# ---------------- CONFIG ----------------
 KEYWORDS_FILE = "keywords.txt"
 POSTS_DIR = "_posts"
 IMAGES_DIR = "images"
 
-MODEL_NAME = "gemini-2.5-flash"
-IMAGE_WIDTH = 1920
-IMAGE_HEIGHT = 1080  # 16:9 aspect ratio
-# ==========================================
-
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-model = genai.GenerativeModel(MODEL_NAME)
+TEXT_MODEL = "gemini-2.5-flash"
+FREEPIK_ENDPOINT = "https://api.freepik.com/v1/ai/text-to-image/flux-dev"
 
 os.makedirs(POSTS_DIR, exist_ok=True)
 os.makedirs(IMAGES_DIR, exist_ok=True)
 
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+FREEPIK_API_KEY = os.environ.get("FREEPIK_API_KEY")
 
-def get_next_keyword():
+# ---------------- HELPERS ----------------
+def get_keyword_row():
     with open(KEYWORDS_FILE, "r", encoding="utf-8") as f:
         lines = [l.strip() for l in f if l.strip()]
 
     if not lines:
         return None
 
-    first = lines[0]
-    with open(KEYWORDS_FILE, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines[1:]))
+    row = lines.pop(0)
 
-    return first
+    with open(KEYWORDS_FILE, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+
+    return row
 
 
 def generate_article(title, focus_kw, permalink, semantic_kw):
@@ -56,29 +54,68 @@ Rules:
 - do not add tags only categories as {focus_kw}
 - use image as image: '/images/{permalink}.webp'
 """
-    response = model.generate_content(prompt)
+
+    response = client.models.generate_content(
+        model=TEXT_MODEL,
+        contents=prompt
+    )
     return response.text
 
 
-def generate_image(title, image_path):
-    prompt = f"Professional blog illustration, {title}, legal theme, clean, modern, realistic"
-    encoded = urllib.parse.quote(prompt)
+def generate_image_prompt(title):
+    prompt = f"""
+Create a photorealistic featured image prompt for a blog.
 
-    url = (
-        f"https://image.pollinations.ai/prompt/{encoded}"
-        f"?width={IMAGE_WIDTH}&height={IMAGE_HEIGHT}&seed=42"
+Title: {title}
+
+Rules:
+- Professional
+- No text
+- Blog featured image
+- 16:9 ratio
+"""
+
+    response = client.models.generate_content(
+        model=TEXT_MODEL,
+        contents=prompt
+    )
+    return response.text.strip()
+
+
+def generate_image_freepik(prompt, output_path):
+    headers = {
+        "x-freepik-api-key": FREEPIK_API_KEY,
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "prompt": prompt,
+        "num_images": 1,
+        "image": {
+            "size": "1920x1080"
+        },
+        "resolution": "2k",
+        "aspect_ratio": "widescreen_16_9",
+        "model": "realism"
+    }
+
+    response = requests.post(
+        FREEPIK_ENDPOINT,
+        headers=headers,
+        json=payload,
+        timeout=120
     )
 
-    print("🖼️ Generating image via Pollinations AI")
-    r = requests.get(url, timeout=120)
-    r.raise_for_status()
+    response.raise_for_status()
+    image_url = response.json()["data"][0]["url"]
 
-    img = Image.open(BytesIO(r.content)).convert("RGB")
-    img.save(image_path, "WEBP", quality=85)
+    img_response = requests.get(image_url)
+    img = Image.open(BytesIO(img_response.content)).convert("RGB")
+    img.save(output_path, "WEBP", quality=85)
 
 
+# ---------------- MAIN ----------------
 def main():
-    row = get_next_keyword()
+    row = get_keyword_row()
     if not row:
         print("❌ No keywords left")
         return
@@ -91,7 +128,7 @@ def main():
 
     today = datetime.date.today().isoformat()
     post_path = f"{POSTS_DIR}/{today}-{permalink}.md"
-    image_path = f"{IMAGES_DIR}/{permalink}.webp"
+    image_file = f"{IMAGES_DIR}/{permalink}.webp"
 
     if os.path.exists(post_path):
         print("⚠️ Post already exists")
@@ -99,13 +136,17 @@ def main():
 
     print(f"✍️ Generating post: {title}")
 
-    content = generate_article(title, focus_kw, permalink, semantic_kw)
-    generate_image(title, image_path)
+    article = generate_article(title, focus_kw, permalink, semantic_kw)
+    image_prompt = generate_image_prompt(title)
+
+    print("🎨 Generating image via Freepik AI")
+    generate_image_freepik(image_prompt, image_file)
+
 
     with open(post_path, "w", encoding="utf-8") as f:
-        f.write(content)
+        f.write(article)
 
-    print("✅ Post published successfully")
+    print("✅ Post + Image published successfully")
 
 
 if __name__ == "__main__":
