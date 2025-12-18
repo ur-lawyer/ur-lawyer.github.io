@@ -66,6 +66,7 @@ Rules:
 - Naturally include focused & semantic keywords
 - use author: Mary
 - do not add tags only categories as {focus_kw}
+- use title: {title}
 - use image as image: '/images/{permalink}.webp'
 """
     
