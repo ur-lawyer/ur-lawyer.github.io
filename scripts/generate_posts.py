@@ -399,27 +399,7 @@ def submit_to_google_indexing(url):
         print(f"   4. Check that your JSON has all required fields")
         return False
 
-# Step 6: Submitting to Google Search Console
-indexing_status = "Not Attempted"
 
-try:
-    indexing_success = submit_to_google_indexing(post_url)
-    if indexing_success:
-        indexing_status = "Success"
-    else:
-        indexing_status = "Failed - See Logs"
-except Exception as e:
-    indexing_status = f"Failed - {str(e)[:100]}"
-
-# Step 7: Logging to Google Sheets
-print(f"\n{'=' * 60}")
-print("Step 7: Logging to Google Sheets")
-print("=" * 60)
-
-try:
-    log_to_google_sheets(title, focus_kw, permalink, image_file, article, indexing_status)
-except Exception as e:
-    print(f"⚠️ Google Sheets logging failed (non-critical): {e}")
 
 # ---------------- MAIN ----------------
 def main():
@@ -580,7 +560,29 @@ def main():
             print("=" * 60)
             print(f"⚠️ Continuing to next keyword...")
             continue
-    
+        
+        # Step 6: Submitting to Google Search Console
+        indexing_status = "Not Attempted"
+
+        try:
+            indexing_success = submit_to_google_indexing(post_url)
+            if indexing_success:
+                indexing_status = "Success"
+            else:
+                indexing_status = "Failed - See Logs"
+        except Exception as e:
+            indexing_status = f"Failed - {str(e)[:100]}"
+
+        # Step 7: Logging to Google Sheets
+        print(f"\n{'=' * 60}")
+        print("Step 7: Logging to Google Sheets")
+        print("=" * 60)
+
+        try:
+            log_to_google_sheets(title, focus_kw, permalink, image_file, article, indexing_status)
+        except Exception as e:
+            print(f"⚠️ Google Sheets logging failed (non-critical): {e}")
+
     # Final summary
     print(f"\n{'=' * 60}")
     print("🎉 WORKFLOW COMPLETE")
