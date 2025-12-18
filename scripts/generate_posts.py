@@ -17,8 +17,8 @@ SITE_DOMAIN = "https://ur-lawyer.github.io"
 TEXT_MODEL = "gemini-2.5-flash"
 FREEPIK_ENDPOINT = "https://api.freepik.com/v1/ai/text-to-image/flux-dev"
 
-# How many posts to generate per run (default: 1)
-POSTS_PER_RUN = 1  # Change to 2, 3, etc. to process multiple keywords
+
+POSTS_PER_RUN = 1  # Change to 2 or 3 for faster content generation
 
 os.makedirs(POSTS_DIR, exist_ok=True)
 os.makedirs(IMAGES_DIR, exist_ok=True)
@@ -32,21 +32,29 @@ def get_keyword_row():
     if not os.path.exists(KEYWORDS_FILE):
         print(f"❌ {KEYWORDS_FILE} not found")
         return None
+    
+    try:
+        with open(KEYWORDS_FILE, "r", encoding="utf-8") as f:
+            lines = [l.strip() for l in f if l.strip()]
         
-    with open(KEYWORDS_FILE, "r", encoding="utf-8") as f:
-        lines = [l.strip() for l in f if l.strip()]
-    
-    if not lines:
+        if not lines:
+            print(f"📋 {KEYWORDS_FILE} is empty")
+            return None
+        
+        row = lines.pop(0)
+        print(f"📝 Removed keyword from file: {row[:50]}...")
+        
+        # Write remaining lines back to file
+        with open(KEYWORDS_FILE, "w", encoding="utf-8") as f:
+            for line in lines:
+                f.write(line + "\n")
+        
+        print(f"📊 Keywords remaining: {len(lines)}")
+        return row
+        
+    except Exception as e:
+        print(f"❌ Error reading keywords.txt: {e}")
         return None
-    
-    row = lines.pop(0)
-    
-    with open(KEYWORDS_FILE, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines))
-        if lines:  # Add trailing newline if there are remaining lines
-            f.write("\n")
-    
-    return row
 
 def generate_article(title, focus_kw, permalink, semantic_kw):
     """Generate blog article using Gemini"""
@@ -265,20 +273,32 @@ def submit_to_google_indexing(url):
     
     if not credentials_json:
         print("⚠️ GOOGLE_SERVICE_ACCOUNT_JSON not found - skipping Google indexing")
-        print("💡 Add this secret in GitHub Settings → Secrets to enable auto-indexing")
+        print("💡 To enable auto-indexing, add this secret in GitHub Settings → Secrets")
         return False
     
     try:
         print(f"🔐 Parsing service account credentials...")
         credentials_info = json.loads(credentials_json)
         
-        print(f"📝 Creating credentials object...")
+        # Validate required fields
+        required_fields = ['type', 'project_id', 'private_key_id', 'private_key', 'client_email']
+        missing_fields = [field for field in required_fields if field not in credentials_info]
+        
+        if missing_fields:
+            print(f"❌ Invalid service account JSON - missing fields: {', '.join(missing_fields)}")
+            print(f"💡 Please download a fresh JSON key from Google Cloud Console")
+            return False
+        
+        print(f"📝 Service account: {credentials_info.get('client_email', 'unknown')}")
+        print(f"📝 Project: {credentials_info.get('project_id', 'unknown')}")
+        
+        print(f"🔧 Creating credentials object...")
         credentials = service_account.Credentials.from_service_account_info(
             credentials_info,
             scopes=['https://www.googleapis.com/auth/indexing']
         )
         
-        print(f"🔧 Building Google Indexing API service...")
+        print(f"🔨 Building Google Indexing API service...")
         service = build('indexing', 'v3', credentials=credentials)
         
         body = {
@@ -286,7 +306,8 @@ def submit_to_google_indexing(url):
             'type': 'URL_UPDATED'
         }
         
-        print(f"📤 Submitting URL to Google Search Console: {url}")
+        print(f"📤 Submitting URL to Google Search Console...")
+        print(f"🔗 URL: {url}")
         response = service.urlNotifications().publish(body=body).execute()
         
         print(f"✅ Successfully submitted to Google!")
@@ -294,14 +315,17 @@ def submit_to_google_indexing(url):
         return True
         
     except json.JSONDecodeError as e:
-        print(f"❌ Invalid JSON in GOOGLE_SERVICE_ACCOUNT_JSON: {e}")
+        print(f"❌ Invalid JSON in GOOGLE_SERVICE_ACCOUNT_JSON")
+        print(f"   Error: {e}")
+        print(f"💡 Make sure you copied the ENTIRE JSON file contents")
         return False
     except Exception as e:
         print(f"❌ Error submitting to Google: {e}")
-        print(f"💡 Make sure:")
-        print(f"   1. Indexing API is enabled in Google Cloud Console")
-        print(f"   2. Service account email is added as owner in Search Console")
-        print(f"   3. JSON credentials are valid")
+        print(f"💡 Common issues:")
+        print(f"   1. Indexing API not enabled in Google Cloud Console")
+        print(f"   2. Service account email not added as owner in Search Console")
+        print(f"   3. Invalid or incomplete JSON credentials")
+        print(f"   4. Check that your JSON has all required fields")
         return False
 
 # ---------------- MAIN ----------------
@@ -324,6 +348,16 @@ def main():
         print("✅ FREEPIK_API_KEY found")
     
     print(f"\n📊 Posts to generate this run: {POSTS_PER_RUN}")
+    
+    # Show keywords file status
+    if os.path.exists(KEYWORDS_FILE):
+        with open(KEYWORDS_FILE, "r", encoding="utf-8") as f:
+            all_lines = [l.strip() for l in f if l.strip()]
+        print(f"📋 Keywords available: {len(all_lines)}")
+        if all_lines:
+            print(f"📄 Next keyword: {all_lines[0][:80]}...")
+    else:
+        print(f"❌ {KEYWORDS_FILE} not found!")
     
     # Process multiple keywords based on POSTS_PER_RUN
     posts_generated = 0
@@ -372,7 +406,8 @@ def main():
         # Check if post already exists
         if os.path.exists(post_path):
             print(f"\n⚠️  Post already exists: {post_path}")
-            print(f"   Skipping to next keyword...")
+            print(f"   This keyword was already processed, continuing to next...")
+            # Note: The keyword has already been removed from keywords.txt by get_keyword_row()
             continue
         
         print(f"\n📝 Output files:")
@@ -439,7 +474,12 @@ def main():
                 print("Step 6: Submitting to Google Search Console")
                 print("=" * 60)
                 
-                submit_to_google_indexing(post_url)
+                try:
+                    submit_to_google_indexing(post_url)
+                except Exception as e:
+                    print(f"⚠️ Google submission failed (non-critical): {e}")
+                    print(f"💡 Post was still published successfully!")
+                    print(f"🔗 You can manually submit: {post_url}")
             
         except Exception as e:
             print(f"\n{'=' * 60}")
