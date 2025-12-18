@@ -16,6 +16,10 @@ IMAGES_DIR = "images"
 SITE_DOMAIN = "https://ur-lawyer.github.io"
 TEXT_MODEL = "gemini-2.5-flash"
 FREEPIK_ENDPOINT = "https://api.freepik.com/v1/ai/text-to-image/flux-dev"
+IMAGE_QUALITY = 80
+IMAGE_MAX_WIDTH = 1920
+IMAGE_MAX_HEIGHT = 1080
+OPTIMIZE_IMAGE = True
 
 # How many posts to generate per run (default: 1)
 # Examples: 1 = 4 posts/day | 2 = 8 posts/day | 3 = 12 posts/day
@@ -233,10 +237,40 @@ def generate_image_freepik(prompt, output_path):
                         img_response = requests.get(image_url, timeout=60)
                         img_response.raise_for_status()
                         
-                        print(f"💾 Converting and saving image...")
-                        img = Image.open(BytesIO(img_response.content)).convert("RGB")
-                        img.save(output_path, "WEBP", quality=85)
+                        print(f"💾 Processing and compressing image...")
                         
+                        # Open and convert image
+                        img = Image.open(BytesIO(img_response.content)).convert("RGB")
+                        
+                        # Get original size
+                        original_size = len(img_response.content)
+                        original_width, original_height = img.size
+                        print(f"📊 Original: {original_width}x{original_height}, {original_size / 1024:.1f} KB")
+                        
+                        # Resize if needed (maintain aspect ratio)
+                        if original_width > IMAGE_MAX_WIDTH or original_height > IMAGE_MAX_HEIGHT:
+                            print(f"🔧 Resizing to fit {IMAGE_MAX_WIDTH}x{IMAGE_MAX_HEIGHT}...")
+                            img.thumbnail((IMAGE_MAX_WIDTH, IMAGE_MAX_HEIGHT), Image.Resampling.LANCZOS)
+                            new_width, new_height = img.size
+                            print(f"✅ Resized to: {new_width}x{new_height}")
+                        
+                        # Save with compression
+                        if OPTIMIZE_IMAGE:
+                            img.save(
+                                output_path, 
+                                "WEBP", 
+                                quality=IMAGE_QUALITY,
+                                method=6,  # Higher compression effort (0-6)
+                                optimize=True  # Enable optimization
+                            )
+                        else:
+                            img.save(output_path, "WEBP", quality=IMAGE_QUALITY)
+                        
+                        # Get compressed size
+                        compressed_size = os.path.getsize(output_path)
+                        compression_ratio = (1 - compressed_size / original_size) * 100
+                        
+                        print(f"📊 Compressed: {compressed_size / 1024:.1f} KB (saved {compression_ratio:.1f}%)")
                         print(f"✅ Image saved: {output_path}")
                         return
                     else:
@@ -251,7 +285,7 @@ def generate_image_freepik(prompt, output_path):
                     continue
                 else:
                     raise Exception(f"Unknown status: {status}")
-        
+                
         # Timeout after max attempts
         raise Exception(f"Generation timeout after {max_attempts * 5} seconds")
         
