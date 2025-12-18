@@ -17,7 +17,8 @@ SITE_DOMAIN = "https://ur-lawyer.github.io"
 TEXT_MODEL = "gemini-2.5-flash"
 FREEPIK_ENDPOINT = "https://api.freepik.com/v1/ai/text-to-image/flux-dev"
 
-
+# How many posts to generate per run (default: 1)
+# Examples: 1 = 4 posts/day | 2 = 8 posts/day | 3 = 12 posts/day
 POSTS_PER_RUN = 1  # Change to 2 or 3 for faster content generation
 
 os.makedirs(POSTS_DIR, exist_ok=True)
