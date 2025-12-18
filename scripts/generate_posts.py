@@ -267,6 +267,74 @@ def generate_image_freepik(prompt, output_path):
         print(f"❌ Error: {e}")
         raise
 
+def log_to_google_sheets(title, focus_kw, permalink, image_path, article_content, indexing_status):
+    """
+    Log published post data to Google Sheets
+    """
+    credentials_json = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
+    spreadsheet_id = os.environ.get("GOOGLE_SPREADSHEET_ID")
+    
+    if not credentials_json:
+        print("⚠️ GOOGLE_SERVICE_ACCOUNT_JSON not found - skipping Google Sheets logging")
+        return False
+    
+    if not spreadsheet_id:
+        print("⚠️ GOOGLE_SPREADSHEET_ID not found - skipping Google Sheets logging")
+        print("💡 Add your spreadsheet ID as a GitHub secret to enable logging")
+        return False
+    
+    try:
+        print(f"📊 Logging to Google Sheets...")
+        
+        # Parse credentials
+        credentials_info = json.loads(credentials_json)
+        
+        # Create credentials with Sheets scope
+        credentials = service_account.Credentials.from_service_account_info(
+            credentials_info,
+            scopes=['https://www.googleapis.com/auth/spreadsheets']
+        )
+        
+        # Build Sheets service
+        service = build('sheets', 'v4', credentials=credentials)
+        
+        # Extract description (first 200 chars of article, removing markdown)
+        import re
+        clean_content = re.sub(r'[#*`\[\]]', '', article_content)
+        description = ' '.join(clean_content.split())[:200] + "..."
+        
+        # Prepare row data
+        timestamp = datetime.datetime.now().isoformat()
+        row_data = [
+            timestamp,
+            title,
+            focus_kw,
+            permalink,
+            f"{SITE_DOMAIN}/{permalink}/",
+            f"{SITE_DOMAIN}/images/{os.path.basename(image_path)}",
+            description,
+            indexing_status,
+            article_content
+        ]
+        
+        # Append to sheet
+        body = {'values': [row_data]}
+        
+        result = service.spreadsheets().values().append(
+            spreadsheetId=spreadsheet_id,
+            range='Sheet1!A:I',
+            valueInputOption='RAW',
+            body=body
+        ).execute()
+        
+        print(f"✅ Successfully logged to Google Sheets!")
+        print(f"📊 Added row: {result.get('updates', {}).get('updatedRows', 0)}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error logging to Google Sheets: {e}")
+        return False
+
 def submit_to_google_indexing(url):
     """
     Submit URL to Google Indexing API for immediate crawling
@@ -329,6 +397,28 @@ def submit_to_google_indexing(url):
         print(f"   3. Invalid or incomplete JSON credentials")
         print(f"   4. Check that your JSON has all required fields")
         return False
+
+# Step 6: Submitting to Google Search Console
+indexing_status = "Not Attempted"
+
+try:
+    indexing_success = submit_to_google_indexing(post_url)
+    if indexing_success:
+        indexing_status = "Success"
+    else:
+        indexing_status = "Failed - See Logs"
+except Exception as e:
+    indexing_status = f"Failed - {str(e)[:100]}"
+
+# Step 7: Logging to Google Sheets
+print(f"\n{'=' * 60}")
+print("Step 7: Logging to Google Sheets")
+print("=" * 60)
+
+try:
+    log_to_google_sheets(title, focus_kw, permalink, image_file, article, indexing_status)
+except Exception as e:
+    print(f"⚠️ Google Sheets logging failed (non-critical): {e}")
 
 # ---------------- MAIN ----------------
 def main():
@@ -463,7 +553,7 @@ def main():
                 print("⏳ This allows GitHub Pages to deploy the post(s) first...")
                 
                 # Wait 5 minutes (300 seconds)
-                wait_time = 300
+                wait_time = 180
                 for remaining in range(wait_time, 0, -30):
                     minutes = remaining // 60
                     seconds = remaining % 60
