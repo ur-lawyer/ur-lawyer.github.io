@@ -1,4 +1,5 @@
 ---
+layout: post
 author: Mary
 categories: personal injury lawyer
 image: '/images/personal-injury-claim-without-lawyer-pros-cons.webp'

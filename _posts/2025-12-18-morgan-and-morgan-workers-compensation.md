@@ -1,4 +1,5 @@
 ---
+layout: post
 author: Mary
 categories: morgan and morgan lawyers
 image: '/images/morgan-and-morgan-workers-compensation.webp'

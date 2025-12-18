@@ -79,10 +79,14 @@ Rules:
 - Write more than 1500 words
 - Write in Jekyll markdown format
 - Naturally include focused & semantic keywords
-- use author: Mary
-- do not add tags only categories as {focus_kw}
-- use title: {title}
-- use image as image: '/images/{permalink}.webp'
+-use the following front matter only:
+layout: post
+title: {title}
+description: "article description in less than 160 characters"
+author: Mary
+tags: [focus_kw]
+featured: false
+image as image: '/images/{permalink}.webp'
 """
     
     print("🤖 Generating article with Gemini...")

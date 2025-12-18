@@ -1,4 +1,5 @@
 ---
+layout: post
 author: Mary
 categories: medical malpractice lawyer
 image: '/images/medical-malpractice-case-timeline.webp'

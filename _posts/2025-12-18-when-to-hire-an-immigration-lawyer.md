@@ -1,7 +1,7 @@
 ---
+layout: post
 author: Mary
 title: When Should You Hire an Immigration Lawyer for Your Case?
-date: 2023-10-27 08:00:00 -0400
 categories: immigration lawyer
 image: '/images/when-to-hire-an-immigration-lawyer.webp'
 ---
