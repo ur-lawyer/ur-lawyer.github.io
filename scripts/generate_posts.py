@@ -66,6 +66,7 @@ Rules:
 - Simple English, a 10 year old can understand
 - Don't write more than 3 sentences per paragraph, changes paragraph after 3 sentences
 - Use "you" to address the reader
+- do not hightlight keywords
 - Include practical examples related to {focus_kw}
 - Use H2 and H3, h4, h5, h6 headings, no H1
 - Use lists, tables, snippets, and other data formats
