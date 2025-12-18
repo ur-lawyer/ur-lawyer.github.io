@@ -84,7 +84,7 @@ layout: post
 title: {title}
 description: "article description in less than 160 characters"
 author: Mary
-tags: [focus_kw]
+tags: {focus_kw}
 featured: false
 image as image: '/images/{permalink}.webp'
 """
