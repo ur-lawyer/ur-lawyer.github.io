@@ -38,7 +38,7 @@ jobs:
           git config user.name "gemini-blog-bot"
           git config user.email "bot@github.com"
 
-          git add _posts images || true
+          git add _posts/ images/ keywords.txt
 
           TITLES=$(git diff --cached --name-only | grep "_posts/" | sed 's#.*/##' | sed 's/.md//' | tr '\n' ',')
 
