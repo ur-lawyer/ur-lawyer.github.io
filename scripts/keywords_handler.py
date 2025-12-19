@@ -25,6 +25,48 @@ def get_keyword_row():
         return None
 
 
+def parse_keyword_row(row):
+    """
+    Parse keyword row with new format:
+    title | focus_kw | permalink | semantic_kw | affiliate_links | linkedin_content | twitter_content
+    
+    Returns:
+        dict with all fields or None if invalid
+    """
+    try:
+        parts = [x.strip() for x in row.split("|")]
+        
+        if len(parts) == 4:
+            # Old format (backward compatible)
+            return {
+                'title': parts[0],
+                'focus_kw': parts[1],
+                'permalink': parts[2],
+                'semantic_kw': parts[3],
+                'affiliate_links': '',
+                'linkedin_content': '',
+                'twitter_content': ''
+            }
+        elif len(parts) == 7:
+            # New format with social media
+            return {
+                'title': parts[0],
+                'focus_kw': parts[1],
+                'permalink': parts[2],
+                'semantic_kw': parts[3],
+                'affiliate_links': parts[4],
+                'linkedin_content': parts[5],
+                'twitter_content': parts[6]
+            }
+        else:
+            print(f"❌ Invalid format. Expected 4 or 7 fields, got {len(parts)}")
+            return None
+            
+    except Exception as e:
+        print(f"❌ Error parsing keyword: {e}")
+        return None
+
+
 def remove_keyword_from_file():
     """Remove the first line from keywords.txt after successful generation"""
     if not os.path.exists(KEYWORDS_FILE):
