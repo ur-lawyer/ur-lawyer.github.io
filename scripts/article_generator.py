@@ -24,7 +24,7 @@ Rules:
 - Write more than 1500 words
 - Write in Jekyll markdown format  artile filename extension .md only
 - Naturally include focused & semantic keywords
-- Description should be a maximum of 160 characters
+- do not add any front matter or meta data
 """
     
     print("🤖 Generating article with Gemini...")
@@ -72,7 +72,7 @@ def create_custom_front_matter(title, focus_kw, permalink):
     escaped_title = title.replace('"', '\\"')
     
     # Generate description (you can make this dynamic)
-    description = f"Learn about {focus_kw} and make informed decisions."
+    description = f"generated description in 160 characters for article title {title}"
     
     # Create front matter
     front_matter = f"""

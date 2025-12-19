@@ -1,16 +1,3 @@
-
-    ---
-    layout: post
-    title: "Hiring a Tax Lawyer for Payroll Tax Issues: A Complete Guide"
-    description: "Learn about tax lawyer and make informed decisions."
-    author: Mary
-    tags: [tax lawyer]
-    featured: false
-    image: '/images/payroll-tax-lawyer-guide.webp'
-    ---
-    
-
-```markdown
 ---
 layout: post
 title: Hiring a Tax Lawyer for Payroll Tax Issues: A Complete Guide
