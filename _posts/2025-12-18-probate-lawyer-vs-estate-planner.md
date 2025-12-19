@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Probate Lawyer vs Estate Planner: What’s the Difference?
+title: "Probate Lawyer vs Estate Planner: What’s the Difference?"
 description: "Confused about probate lawyers and estate planners? Learn the key differences, who does what, and when you need each one in simple terms."
 author: Mary
 tags: probate lawyer
