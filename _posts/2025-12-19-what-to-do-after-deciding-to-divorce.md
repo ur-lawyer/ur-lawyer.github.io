@@ -1,4 +1,3 @@
-```markdown
 ---
 layout: post
 title: What Should You Do Immediately After You Decide to Divorce — Lawyer’s Checklist
@@ -215,4 +214,3 @@ If you're worried about the cost of a divorce lawyer, there are options. Some la
 Deciding to divorce is undoubtedly one of life's most challenging journeys. However, by taking immediate, structured steps, you can navigate this process with greater clarity and confidence. This lawyer's checklist provides a roadmap for your first actions, helping you protect your finances, care for your children, and safeguard your future.
 
 Remember, you don't have to face this alone. Experienced divorce lawyers are your guides, offering crucial legal advice and support every step of the way. Reaching out to a local professional, a "divorce lawyer near me," can make all the difference in achieving a fair and positive outcome. By following these first steps divorce procedures, you are actively taking control of your life and building a foundation for a new beginning.
-```

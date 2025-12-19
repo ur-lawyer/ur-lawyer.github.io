@@ -1,4 +1,3 @@
-```markdown
 ---
 layout: post
 title: What Are Your Options for Affordable or Pro-Bono Criminal Lawyers & Legal Aid?
@@ -248,4 +247,3 @@ Navigating the criminal justice system can be intimidating, especially when conc
 Your right to a fair defense is fundamental, and there are resources designed to ensure that everyone, regardless of their income, can access justice. Don't hesitate to explore public defenders, non-profit groups, and online directories to connect with the right professional. Acting quickly and gathering all necessary information will significantly strengthen your position.
 
 By understanding your options and taking proactive steps, you can secure the legal assistance you need to protect your rights and work towards the best possible outcome for your case. Remember, help is available, and you don't have to face criminal charges alone.
-```

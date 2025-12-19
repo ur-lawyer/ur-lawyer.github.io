@@ -1,14 +1,14 @@
 ---
-    layout: post
-    title: "What Should You Do Immediately After a Car Accident (Before Hiring a Lawyer)?"
-    description: "Learn about personal injury lawyer and make informed decisions."
-    author: Mary
-    tags: [personal injury lawyer]
-    featured: false
-    image: '/images/what-to-do-after-car-accident-before-lawyer.webp'
-    ---
+layout: post
+title: "What Should You Do Immediately After a Car Accident (Before Hiring a Lawyer)?"
+description: "Learn about personal injury lawyer and make informed decisions."
+author: Mary
+tags: [personal injury lawyer]
+featured: false
+image: '/images/what-to-do-after-car-accident-before-lawyer.webp'
+---
 
-```markdown
+
 ## What Should You Do Immediately After a Car Accident (Before Hiring a Lawyer)?
 
 A car accident can be a scary and confusing experience. One moment everything is normal, and the next, your life might be turned upside down. It's easy to feel panicked and unsure of what to do next.
@@ -265,4 +265,3 @@ Getting into a car accident is tough. But by taking the right steps immediately,
 Even before you think about contacting a personal injury lawyer, these actions are crucial. They create a strong foundation for any future claims. These steps ensure you are taken care of.
 
 If your injuries are serious, or if dealing with insurance companies becomes difficult, then it's time to talk to a personal injury lawyer. They are experts in these situations. They can help you get the compensation you deserve. Following these steps can make a huge difference in your recovery and your peace of mind.
-```
