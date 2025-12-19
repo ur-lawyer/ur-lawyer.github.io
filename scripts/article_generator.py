@@ -74,7 +74,7 @@ def create_custom_front_matter(title, focus_kw, permalink):
     # Generate description (you can make this dynamic)
     description = f"generated description in 160 characters for article title {title}"
     
-    # Create front matter
+    # Create front matter - NO LEADING SPACES!
     front_matter = f"""---
 layout: post
 title: "{escaped_title}"
@@ -84,7 +84,7 @@ tags: [{focus_kw}]
 featured: false
 image: '/images/{permalink}.webp'
 ---"""
-    
+       
     return front_matter
 
 

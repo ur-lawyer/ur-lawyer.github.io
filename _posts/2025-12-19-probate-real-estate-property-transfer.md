@@ -1,13 +1,13 @@
 ---
-    layout: post
-    title: "Probate and Real Estate: How Lawyers Handle Property Transfers"
-    description: "generated description in 160 characters for article title Probate and Real Estate: How Lawyers Handle Property Transfers"
-    author: Mary
-    tags: [probate lawyer]
-    featured: false
-    image: '/images/probate-real-estate-property-transfer.webp'
-    ---
-    
+layout: post
+title: "Probate and Real Estate: How Lawyers Handle Property Transfers"
+description: "generated description in 160 characters for article title Probate and Real Estate: How Lawyers Handle Property Transfers"
+author: Mary
+tags: [probate lawyer]
+featured: false
+image: '/images/probate-real-estate-property-transfer.webp'
+---
+
 
 ## Probate and Real Estate: How Lawyers Handle Property Transfers
 
