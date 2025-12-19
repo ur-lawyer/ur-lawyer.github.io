@@ -1,8 +1,8 @@
 ---
 layout: post
-title: Hiring a Tax Lawyer for Payroll Tax Issues: A Complete Guide
-description: Facing payroll tax issues? Learn when and why you need a tax lawyer to navigate disputes, penalties, and protect your business.
-keywords: tax lawyer, payroll tax, trust fund recovery penalty, payroll tax dispute, IRS, business tax, employment tax, tax attorney, business owner
+title: "Hiring a Tax Lawyer for Payroll Tax Issues: A Complete Guide"
+description: "Facing payroll tax issues? Learn when and why you need a tax lawyer to navigate disputes, penalties, and protect your business."
+keywords: "tax lawyer, payroll tax, trust fund recovery penalty, payroll tax dispute, IRS, business tax, employment tax, tax attorney, business owner"
 ---
 
 ## Introduction to Payroll Tax Issues
