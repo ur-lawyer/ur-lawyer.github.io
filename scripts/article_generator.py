@@ -75,8 +75,7 @@ def create_custom_front_matter(title, focus_kw, permalink):
     description = f"generated description in 160 characters for article title {title}"
     
     # Create front matter
-    front_matter = f"""
-    ---
+    front_matter = f"""---
     layout: post
     title: "{escaped_title}"
     description: "{description}"

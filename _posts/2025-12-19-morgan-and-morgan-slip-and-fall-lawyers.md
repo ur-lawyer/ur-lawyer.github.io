@@ -1,21 +1,11 @@
 ---
-    layout: post
-    title: "Can Morgan & Morgan Help with Slip and Fall Accidents?"
-    description: "Learn about morgan and morgan lawyers and make informed decisions."
-    author: Mary
-    tags: [morgan and morgan lawyers]
-    featured: false
-    image: '/images/morgan-and-morgan-slip-and-fall-lawyers.webp'
-    ---
-
-```markdown
----
 layout: post
-title: Can Morgan & Morgan Help with Slip and Fall Accidents?
-author: Your Name/Legal Expert
-date: 2023-10-27
-categories: [legal, personal injury, slip and fall]
-tags: [morgan and morgan lawyers, premises liability attorneys, fall injury claims, slip and fall accidents, personal injury law]
+title: "Can Morgan & Morgan Help with Slip and Fall Accidents?"
+description: "Learn about morgan and morgan lawyers and make informed decisions."
+author: Mary
+tags: [morgan and morgan lawyers]
+featured: false
+image: '/images/morgan-and-morgan-slip-and-fall-lawyers.webp'
 ---
 
 Slip and fall accidents can happen to anyone, anywhere. One moment you're walking, and the next you're on the ground, possibly hurt. These accidents are not just embarrassing; they can cause serious injuries and a lot of pain.

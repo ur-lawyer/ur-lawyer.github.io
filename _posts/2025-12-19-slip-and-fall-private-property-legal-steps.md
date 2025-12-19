@@ -1,14 +1,13 @@
+---
+layout: post
+title: "What to Do If You Slip and Fall on Private Property — Legal Steps"
+description: "generated description in 160 characters for article title What to Do If You Slip and Fall on Private Property — Legal Steps"
+author: Mary
+tags: [slip and fall lawyer]
+featured: false
+image: '/images/slip-and-fall-private-property-legal-steps.webp'
+---
 
-    ---
-    layout: post
-    title: "What to Do If You Slip and Fall on Private Property — Legal Steps"
-    description: "generated description in 160 characters for article title What to Do If You Slip and Fall on Private Property — Legal Steps"
-    author: Mary
-    tags: [slip and fall lawyer]
-    featured: false
-    image: '/images/slip-and-fall-private-property-legal-steps.webp'
-    ---
-    
 
 ## What to Do If You Slip and Fall on Private Property — Legal Steps
 
