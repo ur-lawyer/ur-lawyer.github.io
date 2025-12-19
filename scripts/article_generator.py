@@ -84,8 +84,7 @@ def create_custom_front_matter(title, focus_kw, permalink):
     tags: [{focus_kw}]
     featured: false
     image: '/images/{permalink}.webp'
-    ---
-    """
+    ---"""
     
     return front_matter
 
