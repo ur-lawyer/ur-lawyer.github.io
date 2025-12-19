@@ -1,12 +1,12 @@
 ---
-    layout: post
-    title: "What Does a Divorce Lawyer Actually Do? A Beginner’s Guide"
-    description: "generated description in 160 characters for article title What Does a Divorce Lawyer Actually Do? A Beginner’s Guide"
-    author: Mary
-    tags: [divorce lawyers]
-    featured: false
-    image: '/images/what-does-a-divorce-lawyer-do.webp'
-    ---
+layout: post
+title: "What Does a Divorce Lawyer Actually Do? A Beginner’s Guide"
+description: "generated description in 160 characters for article title What Does a Divorce Lawyer Actually Do? A Beginner’s Guide"
+author: Mary
+tags: [divorce lawyers]
+featured: false
+image: '/images/what-does-a-divorce-lawyer-do.webp'
+---
     
 
 ## What Does a Divorce Lawyer Actually Do? A Beginner’s Guide

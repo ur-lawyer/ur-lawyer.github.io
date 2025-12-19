@@ -76,13 +76,14 @@ def create_custom_front_matter(title, focus_kw, permalink):
     
     # Create front matter
     front_matter = f"""---
-    layout: post
-    title: "{escaped_title}"
-    description: "{description}"
-    author: Mary
-    tags: [{focus_kw}]
-    featured: false
-    image: '/images/{permalink}.webp'---"""
+layout: post
+title: "{escaped_title}"
+description: "{description}"
+author: Mary
+tags: [{focus_kw}]
+featured: false
+image: '/images/{permalink}.webp'
+---"""
     
     return front_matter
 
