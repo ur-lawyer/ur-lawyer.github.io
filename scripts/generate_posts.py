@@ -5,11 +5,13 @@ import datetime
 
 # Import all modules
 from config import *
-from keywords_handler import get_keyword_row, remove_keyword_from_file, get_keywords_count
+from keywords_handler import get_keyword_row, parse_keyword_row, remove_keyword_from_file, get_keywords_count
 from article_generator import generate_article, generate_image_prompt
 from image_generator import generate_image_freepik
 from google_indexing import submit_to_google_indexing
 from google_sheets_logger import log_to_google_sheets
+from twitter_poster import post_to_twitter
+from linkedin_poster import post_to_linkedin
 
 
 def main():
@@ -48,20 +50,22 @@ def main():
         
         print(f"\n📋 Keyword: {row[:80]}...")
         
-        # Parse keyword
-        try:
-            parts = [x.strip() for x in row.split("|")]
-            if len(parts) != 4:
-                print(f"❌ Invalid format. Expected 4 fields, got {len(parts)}")
-                remove_keyword_from_file()  # Remove invalid keyword
-                continue
-            
-            title, focus_kw, permalink, semantic_kw = parts
-            print(f"✅ Parsed: {title[:60]}...")
-        except ValueError as e:
-            print(f"❌ Error parsing: {e}")
-            remove_keyword_from_file()
+        # Parse keyword with new format
+        keyword_data = parse_keyword_row(row)
+        if not keyword_data:
+            print(f"❌ Invalid keyword format")
+            remove_keyword_from_file()  # Remove invalid keyword
             continue
+        
+        title = keyword_data['title']
+        focus_kw = keyword_data['focus_kw']
+        permalink = keyword_data['permalink']
+        semantic_kw = keyword_data['semantic_kw']
+        affiliate_links = keyword_data['affiliate_links']
+        linkedin_content = keyword_data['linkedin_content']
+        twitter_content = keyword_data['twitter_content']
+        
+        print(f"✅ Parsed: {title[:60]}...")
         
         # Generate file paths
         today = datetime.date.today().isoformat()
@@ -104,7 +108,7 @@ def main():
                 f.write(article)
             print(f"✅ Post saved: {post_path}")
             
-            post_url = f"{SITE_DOMAIN}/{permalink}/"
+            post_url = f"{SITE_DOMAIN}/{permalink}"
             
             print(f"\n{'=' * 60}")
             print(f"✅ SUCCESS! Post {post_num} Generated")
@@ -154,10 +158,36 @@ def main():
                     )
                 except Exception as e:
                     print(f"⚠️ Sheets logging failed (non-critical): {e}")
+                
+                # Step 8: Post to Twitter
+                if twitter_content:
+                    print(f"\n{'=' * 60}")
+                    print("Step 8: Posting to Twitter")
+                    print("=" * 60)
+                    
+                    try:
+                        post_to_twitter(title, permalink, twitter_content, affiliate_links)
+                    except Exception as e:
+                        print(f"⚠️ Twitter posting failed (non-critical): {e}")
+                else:
+                    print(f"\n⚠️ No Twitter content provided - skipping Twitter post")
+                
+                # Step 9: Post to LinkedIn
+                if linkedin_content:
+                    print(f"\n{'=' * 60}")
+                    print("Step 9: Posting to LinkedIn")
+                    print("=" * 60)
+                    
+                    try:
+                        post_to_linkedin(title, permalink, linkedin_content, affiliate_links)
+                    except Exception as e:
+                        print(f"⚠️ LinkedIn posting failed (non-critical): {e}")
+                else:
+                    print(f"\n⚠️ No LinkedIn content provided - skipping LinkedIn post")
             
-            # Step 8: Remove keyword after success
+            # Step 10: Remove keyword after success
             print(f"\n{'=' * 60}")
-            print("Step 8: Removing Keyword from File")
+            print("Step 10: Removing Keyword from File")
             print("=" * 60)
             remove_keyword_from_file()
             
