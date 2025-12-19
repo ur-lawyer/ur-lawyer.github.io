@@ -24,6 +24,7 @@ Rules:
 - Write more than 1500 words
 - Write in Jekyll markdown format  artile filename extension .md only
 - Naturally include focused & semantic keywords
+- Description should be a maximum of 160 characters
 """
     
     print("🤖 Generating article with Gemini...")
