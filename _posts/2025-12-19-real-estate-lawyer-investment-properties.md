@@ -1,13 +1,13 @@
 ---
-    layout: post
-    title: "Do You Need a Real Estate Lawyer for Investment Properties?"
-    description: "generated description in 160 characters for article title Do You Need a Real Estate Lawyer for Investment Properties?"
-    author: Mary
-    tags: [real estate lawyer]
-    featured: false
-    image: '/images/real-estate-lawyer-investment-properties.webp'
-    ---
-    
+layout: post
+title: "Do You Need a Real Estate Lawyer for Investment Properties?"
+description: "generated description in 160 characters for article title Do You Need a Real Estate Lawyer for Investment Properties?"
+author: Mary
+tags: [real estate lawyer]
+featured: false
+image: '/images/real-estate-lawyer-investment-properties.webp'
+---
+
 
 Do You Need a Real Estate Lawyer for Investment Properties?
 

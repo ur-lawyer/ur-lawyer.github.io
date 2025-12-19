@@ -1,13 +1,13 @@
 ---
-    layout: post
-    title: "What Does an Accident Lawyer Do? A Beginner’s Guide"
-    description: "generated description in 160 characters for article title What Does an Accident Lawyer Do? A Beginner’s Guide"
-    author: Mary
-    tags: [accident lawyer]
-    featured: false
-    image: '/images/what-does-an-accident-lawyer-do.webp'
-    ---
-    
+layout: post
+title: "What Does an Accident Lawyer Do? A Beginner’s Guide"
+description: "generated description in 160 characters for article title What Does an Accident Lawyer Do? A Beginner’s Guide"
+author: Mary
+tags: [accident lawyer]
+featured: false
+image: '/images/what-does-an-accident-lawyer-do.webp'
+---
+
 
 ## What Does an Accident Lawyer Do? A Beginner’s Guide
 

@@ -1,12 +1,12 @@
 ---
-    layout: post
-    title: "How Much Alimony & Child Support Will I Pay? What a Divorce Lawyer Considers"
-    description: "generated description in 160 characters for article title How Much Alimony & Child Support Will I Pay? What a Divorce Lawyer Considers"
-    author: Mary
-    tags: [divorce lawyers]
-    featured: false
-    image: '/images/alimony-child-support-calculation-divorce-lawyer.webp'
-    ---
+layout: post
+title: "How Much Alimony & Child Support Will I Pay? What a Divorce Lawyer Considers"
+description: "generated description in 160 characters for article title How Much Alimony & Child Support Will I Pay? What a Divorce Lawyer Considers"
+author: Mary
+tags: [divorce lawyers]
+featured: false
+image: '/images/alimony-child-support-calculation-divorce-lawyer.webp'
+---
     
 
 ## Navigating Divorce: Understanding Alimony & Child Support Payments
