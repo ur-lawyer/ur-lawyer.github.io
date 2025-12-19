@@ -1,12 +1,12 @@
 ---
-    layout: post
-    title: "Can You Handle an Accident Claim Without a Lawyer? Pros & Cons"
-    description: "generated description in 160 characters for article title Can You Handle an Accident Claim Without a Lawyer? Pros & Cons"
-    author: Mary
-    tags: [accident lawyer]
-    featured: false
-    image: '/images/accident-claim-without-lawyer-pros-cons.webp'
-    ---
+layout: post
+title: "Can You Handle an Accident Claim Without a Lawyer? Pros & Cons"
+description: "generated description in 160 characters for article title Can You Handle an Accident Claim Without a Lawyer? Pros & Cons"
+author: Mary
+tags: [accident lawyer]
+featured: false
+image: '/images/accident-claim-without-lawyer-pros-cons.webp'
+---
 
 ## Can You Handle an Accident Claim Without a Lawyer? Pros & Cons
 
