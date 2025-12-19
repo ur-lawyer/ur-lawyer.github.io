@@ -1,12 +1,12 @@
 ---
-    layout: post
-    title: "What Happens If Your Immigration Case Requires Appeals or Motions?"
-    description: "Learn about immigration lawyer and make informed decisions."
-    author: Mary
-    tags: [immigration lawyer]
-    featured: false
-    image: '/images/immigration-appeals-motions-lawyer.webp'
-    ---
+layout: post
+title: "What Happens If Your Immigration Case Requires Appeals or Motions?"
+description: "Learn about immigration lawyer and make informed decisions."
+author: Mary
+tags: [immigration lawyer]
+featured: false
+image: '/images/immigration-appeals-motions-lawyer.webp'
+---
 
 Immigration cases can sometimes feel like a long and winding road. You might have applied for something important, like a visa or a green card. Then, you might receive a decision that isn't what you hoped for. This can be a very confusing and worrying time for you.
 
