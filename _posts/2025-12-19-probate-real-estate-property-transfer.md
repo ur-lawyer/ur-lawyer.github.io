@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Probate and Real Estate: How Lawyers Handle Property Transfers"
-description: "generated description in 160 characters for article title Probate and Real Estate: How Lawyers Handle Property Transfers"
+description: "Confused about property transfers during probate? See how real estate lawyers guide estates through legal and title issues."
 author: Mary
 tags: [probate lawyer]
 featured: false

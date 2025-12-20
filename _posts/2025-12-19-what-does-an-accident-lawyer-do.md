@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "What Does an Accident Lawyer Do? A Beginner’s Guide"
-description: "generated description in 160 characters for article title What Does an Accident Lawyer Do? A Beginner’s Guide"
+description: "Learn what an accident lawyer does, including case evaluation, insurance negotiations, evidence gathering, and fighting for fair compensation after an injury."
 author: Mary
 tags: [accident lawyer]
 featured: false

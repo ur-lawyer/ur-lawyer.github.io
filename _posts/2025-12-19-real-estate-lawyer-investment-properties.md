@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Do You Need a Real Estate Lawyer for Investment Properties?"
-description: "generated description in 160 characters for article title Do You Need a Real Estate Lawyer for Investment Properties?"
+description: "Buying investment property? Discover how a real estate lawyer helps reduce risk, review contracts, and protect your returns."
 author: Mary
 tags: [real estate lawyer]
 featured: false

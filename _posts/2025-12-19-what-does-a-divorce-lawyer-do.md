@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "What Does a Divorce Lawyer Actually Do? A Beginner’s Guide"
-description: "generated description in 160 characters for article title What Does a Divorce Lawyer Actually Do? A Beginner’s Guide"
+description: "Discover the role of a divorce lawyer, from filing paperwork to negotiating settlements, protecting your rights, and guiding you through the divorce process."
 author: Mary
 tags: [divorce lawyers]
 featured: false

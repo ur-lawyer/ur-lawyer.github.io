@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Tenant Rights During Eviction: How a Lawyer Can Protect You"
-description: "generated description in 160 characters for article title Tenant Rights During Eviction: How a Lawyer Can Protect You"
+description: "Understand tenant rights during eviction and how a lawyer can protect you from illegal notices, unfair practices, and help you secure time, relief, or compensation."
 author: Mary
 tags: [tenant lawyer]
 featured: false

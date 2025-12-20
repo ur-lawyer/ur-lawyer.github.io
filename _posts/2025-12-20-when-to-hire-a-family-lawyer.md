@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "When Should You Hire a Family Lawyer for Your Case?"
-description: "generated description in 160 characters for article title When Should You Hire a Family Lawyer for Your Case?"
+description: "Know when hiring a family lawyer is the right move. Learn key situations where legal guidance protects your rights, finances, and family’s future."
 author: Mary
 tags: [family lawyers]
 featured: false

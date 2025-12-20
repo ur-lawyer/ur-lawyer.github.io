@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "What Should You Expect From Your Immigration Lawyer’s Communication & Case Process?"
-description: "generated description in 160 characters for article title What Should You Expect From Your Immigration Lawyer’s Communication & Case Process?"
+description: "Understand how an immigration lawyer communicates, manages your case, provides updates, and guides you through each step."
 author: Mary
 tags: [immigration lawyer]
 featured: false

@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "How Much Alimony & Child Support Will I Pay? What a Divorce Lawyer Considers"
-description: "generated description in 160 characters for article title How Much Alimony & Child Support Will I Pay? What a Divorce Lawyer Considers"
+description: "Wondering how alimony and child support are calculated? Discover what divorce lawyers look at and what affects your final amount."
 author: Mary
 tags: [divorce lawyers]
 featured: false

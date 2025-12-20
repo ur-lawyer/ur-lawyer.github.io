@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Do You Need a Lawyer for a Minor Car Accident? Pros and Cons"
-description: "generated description in 160 characters for article title Do You Need a Lawyer for a Minor Car Accident? Pros and Cons"
+description: "gNot sure if you need a lawyer after a minor car accident? Learn the benefits, drawbacks, and when hiring one helps."
 author: Mary
 tags: [truck, car accident lawyer]
 featured: false

@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "How to Find a Reputable Tax Lawyer for Your Startup in the U.S."
-description: "generated description in 160 characters for article title How to Find a Reputable Tax Lawyer for Your Startup in the U.S."
+description: "Learn how to choose a trustworthy U.S. tax lawyer for your startup, what qualifications matter, key questions to ask, and how to avoid costly tax mistakes."
 author: Mary
 tags: [tax lawyer]
 featured: false
