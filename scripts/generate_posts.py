@@ -149,8 +149,12 @@ def main():
                 
                     # Wait for Google's API to update metadata
                 if success:
-                    print(f"\n⏳ Waiting 50 seconds for indexing queue to update...")
-                    time.sleep(50)
+                    print(f"\n⏳ Waiting 50 seconds for Check indexing status...")
+                    for remaining in range(WAIT_TIME_BEFORE_INDEXING, 0, -30):
+                        minutes = remaining // 60
+                        seconds = remaining % 60
+                        print(f"⏰ Time remaining: {minutes}m {seconds}s", end='\r')
+                        time.sleep(30)
                 
                 # Step 7: Check indexing status
                 try:
