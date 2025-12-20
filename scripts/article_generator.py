@@ -72,7 +72,7 @@ def create_custom_front_matter(title, focus_kw, permalink):
     escaped_title = title.replace('"', '\\"')
     
     # Generate description (you can make this dynamic)
-    description = f"generated description in 160 characters for article title {title}"
+    description = generate_description(title, focus_kw)
     
     # Create front matter - NO LEADING SPACES!
     front_matter = f"""---
@@ -87,6 +87,40 @@ image: '/images/{permalink}.webp'
        
     return front_matter
 
+def generate_description(title, focus_kw):
+    """Generate SEO-optimized meta description (160 characters)"""
+    prompt = f"""
+Generate a compelling meta description for this blog post.
+
+Title: {title}
+Focus Keyword: {focus_kw}
+
+Requirements:
+- EXACTLY 150-160 characters (this is critical)
+- Include the focus keyword naturally
+- Action-oriented and engaging
+- Make readers want to click
+- No quotes or special characters
+- Complete sentence
+
+Return ONLY the description text, nothing else.
+"""
+    
+    print("📝 Generating meta description...")
+    response = client.models.generate_content(
+        model=TEXT_MODEL,
+        contents=prompt
+    )
+    
+    description = response.text.strip()
+    
+    # Ensure it's under 160 characters
+    if len(description) > 160:
+        description = description[:157] + "..."
+    
+    print(f"✅ Description generated: {description} ({len(description)} chars)")
+    
+    return description
 
 
 
