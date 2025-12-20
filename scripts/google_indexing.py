@@ -53,3 +53,34 @@ def submit_to_google_indexing(url):
     except Exception as e:
         print(f"❌ Error submitting to Google: {e}")
         return False
+    
+def check_indexing_status(url):
+    """Check the indexing status of a submitted URL"""
+    if not GOOGLE_SERVICE_ACCOUNT_JSON:
+        print("⚠️ GOOGLE_SERVICE_ACCOUNT_JSON not found")
+        return None
+    
+    try:
+        credentials_info = json.loads(GOOGLE_SERVICE_ACCOUNT_JSON)
+        credentials = service_account.Credentials.from_service_account_info(
+            credentials_info,
+            scopes=['https://www.googleapis.com/auth/indexing']
+        )
+        
+        service = build('indexing', 'v3', credentials=credentials)
+        
+        print(f"📊 Checking indexing status for: {url}")
+        response = service.urlNotifications().getMetadata(url=url).execute()
+        
+        if 'latestUpdate' in response:
+            latest = response['latestUpdate']
+            print(f"✅ Status: {latest.get('type')}")
+            print(f"📅 Notify time: {latest.get('notifyTime')}")
+        else:
+            print(f"ℹ️ No indexing history found for this URL")
+        
+        return response
+        
+    except Exception as e:
+        print(f"❌ Error checking status: {e}")
+        return None

@@ -8,7 +8,7 @@ from config import *
 from keywords_handler import get_keyword_row, parse_keyword_row, remove_keyword_from_file, get_keywords_count
 from article_generator import generate_article, generate_image_prompt
 from image_generator import generate_image_freepik
-from google_indexing import submit_to_google_indexing
+from google_indexing import submit_to_google_indexing, check_indexing_status
 from google_sheets_logger import log_to_google_sheets
 from twitter_poster import post_to_twitter
 from linkedin_poster import post_to_linkedin
@@ -142,6 +142,18 @@ def main():
                 indexing_status = "Not Attempted"
                 try:
                     success = submit_to_google_indexing(post_url)
+                    indexing_status = "Success" if success else "Failed - See Logs"
+                except Exception as e:
+                    indexing_status = f"Failed - {str(e)[:100]}"
+                    print(f"⚠️ Indexing failed (non-critical): {e}")
+                
+                # Step 7: Log to Sheets
+                print(f"\n{'=' * 60}")
+                print("Step 7: Logging to Google Sheets")
+                print("=" * 60)
+
+                try:
+                    success = check_indexing_status(post_url)
                     indexing_status = "Success" if success else "Failed - See Logs"
                 except Exception as e:
                     indexing_status = f"Failed - {str(e)[:100]}"
