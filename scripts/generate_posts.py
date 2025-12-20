@@ -12,6 +12,7 @@ from google_indexing import submit_to_google_indexing
 from google_sheets_logger import log_to_google_sheets
 from twitter_poster import post_to_twitter
 from linkedin_poster import post_to_linkedin
+from webpushr_notifier import send_blog_post_notification, get_subscriber_count
 
 
 def main():
@@ -184,6 +185,16 @@ def main():
                         print(f"⚠️ LinkedIn posting failed (non-critical): {e}")
                 else:
                     print(f"\n⚠️ No LinkedIn content provided - skipping LinkedIn post")
+
+                    try:
+                        send_blog_post_notification(title, permalink, focus_kw)
+                    except Exception as e:
+                        print(f"⚠️ Push notification failed (non-critical): {e}")
+            
+            # Step 11: Remove keyword after success
+            print(f"\n{'=' * 60}")
+            print("Step 11: Removing Keyword from File")
+            print("=" * 60)
             
             # Step 10: Remove keyword after success
             print(f"\n{'=' * 60}")
