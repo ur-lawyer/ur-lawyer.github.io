@@ -153,11 +153,29 @@ def main():
                 print("=" * 60)
 
                 try:
-                    success = check_indexing_status(post_url)
-                    indexing_status = "Success" if success else "Failed - See Logs"
+                    status_result = check_indexing_status(post_url)
+                    
+                    if status_result is None:
+                        print(f"⚠️ Could not verify indexing status - check credentials")
+                        indexing_status += " (Status: Unverified)"
+                        
+                    elif status_result == {} or 'latestUpdate' not in status_result:
+                        print(f"ℹ️ No indexing history found (may take a moment to appear)")
+                        indexing_status += " (Status: Pending)"
+                        
+                    elif status_result.get('latestUpdate', {}).get('type') == 'URL_UPDATED':
+                        notify_time = status_result['latestUpdate']['notifyTime']
+                        print(f"✅ Confirmed in indexing queue at {notify_time}")
+                        indexing_status = "Success (Confirmed in Queue)"
+                        
+                    elif status_result.get('latestUpdate', {}).get('type') == 'URL_DELETED':
+                        notify_time = status_result['latestUpdate']['notifyTime']
+                        print(f"🗑️ URL marked for deletion at {notify_time}")
+                        indexing_status = "Deleted"
+                        
                 except Exception as e:
-                    indexing_status = f"Failed - {str(e)[:100]}"
-                    print(f"⚠️ Indexing failed (non-critical): {e}")
+                    print(f"⚠️ Error checking indexing status: {e}")
+                    indexing_status += " (Verification Failed)"
                 
                 # Step 7: Log to Sheets
                 print(f"\n{'=' * 60}")
