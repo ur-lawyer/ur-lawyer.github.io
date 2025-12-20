@@ -147,11 +147,12 @@ def main():
                     indexing_status = f"Failed - {str(e)[:100]}"
                     print(f"⚠️ Indexing failed (non-critical): {e}")
                 
-                # Step 7: Log to Sheets
-                print(f"\n{'=' * 60}")
-                print("Step 7: Logging to Google Sheets")
-                print("=" * 60)
-
+                    # Wait for Google's API to update metadata
+                if success:
+                    print(f"\n⏳ Waiting 50 seconds for indexing queue to update...")
+                    time.sleep(50)
+                
+                # Step 7: Check indexing status
                 try:
                     status_result = check_indexing_status(post_url)
                     
@@ -177,7 +178,7 @@ def main():
                     print(f"⚠️ Error checking indexing status: {e}")
                     indexing_status += " (Verification Failed)"
                 
-                # Step 7: Log to Sheets
+                # Step 8: Log to Sheets
                 print(f"\n{'=' * 60}")
                 print("Step 7: Logging to Google Sheets")
                 print("=" * 60)
@@ -190,7 +191,7 @@ def main():
                 except Exception as e:
                     print(f"⚠️ Sheets logging failed (non-critical): {e}")
                 
-                # Step 8: Post to Twitter
+                # Step 9: Post to Twitter
                 if twitter_content:
                     print(f"\n{'=' * 60}")
                     print("Step 8: Posting to Twitter")
@@ -203,7 +204,7 @@ def main():
                 else:
                     print(f"\n⚠️ No Twitter content provided - skipping Twitter post")
                 
-                # Step 9: Post to LinkedIn
+                # Step 10: Post to LinkedIn
                 if linkedin_content:
                     print(f"\n{'=' * 60}")
                     print("Step 9: Posting to LinkedIn")
@@ -226,7 +227,7 @@ def main():
             print("Step 11: Removing Keyword from File")
             print("=" * 60)
             
-            # Step 10: Remove keyword after success
+            # Step 12: Remove keyword after success
             print(f"\n{'=' * 60}")
             print("Step 10: Removing Keyword from File")
             print("=" * 60)
