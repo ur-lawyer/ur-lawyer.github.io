@@ -50,7 +50,6 @@ def send_webpushr_notification(title, message, target_url, image_url=None):
             "target_url": target_url,
             "icon": f"{SITE_DOMAIN}/logo.png",  # Your site logo
             "auto_hide": 1,  # Auto hide after shown
-            "expire_push": 86400,  # Expire after 24 hours (in seconds)
         }
         
         # Add large image if provided

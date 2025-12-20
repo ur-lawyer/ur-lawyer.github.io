@@ -552,7 +552,7 @@ def main():
             print(f"✅ Post saved: {post_path}")
             
             # Construct the full URL for the post
-            post_url = f"{SITE_DOMAIN}/{permalink}/"
+            post_url = f"{SITE_DOMAIN}/{permalink}"
             
             print(f"\n{'=' * 60}")
             print(f"✅ SUCCESS! Post {post_num} Generated")
