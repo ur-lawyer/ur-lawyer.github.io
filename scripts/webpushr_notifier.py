@@ -49,7 +49,7 @@ def send_webpushr_notification(title, message, target_url, image_url=None):
             "title": title,
             "message": message,
             "target_url": target_url,
-            "icon": f"{SITE_DOMAIN}/logo.png",  # Your site logo
+            "icon": f"{SITE_DOMAIN}/assets/images/site-logo.webp", # Your site logo
             "auto_hide": 1,  # Auto hide after shown
         }
         
@@ -183,7 +183,7 @@ def send_action_button_notification(title, message, target_url, button_title="Re
             "title": title,
             "message": message,
             "target_url": target_url,
-            "icon": f"{SITE_DOMAIN}/logo.png",
+            "icon": f"{SITE_DOMAIN}/assets/images/site-logo.webp",
             "action_buttons": [
                 {
                     "title": button_title,
