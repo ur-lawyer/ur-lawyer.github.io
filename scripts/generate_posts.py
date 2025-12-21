@@ -7,7 +7,7 @@ import re
 # Import all modules
 from config import *
 from keywords_handler import get_keyword_row, parse_keyword_row, remove_keyword_from_file, get_keywords_count
-from article_generator import generate_article, generate_image_prompt
+from article_generator import generate_article, generate_image_prompt, generate_description
 from image_generator import generate_image_freepik
 from google_indexing import submit_to_google_indexing, check_indexing_status
 from google_sheets_logger import log_to_google_sheets
