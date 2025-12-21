@@ -2,7 +2,7 @@
 import os
 import requests
 from config import SITE_DOMAIN
-from scripts.article_generator import generate_description
+from article_generator import generate_description
 
 # Webpushr API credentials from environment
 WEBPUSHR_API_KEY = os.environ.get("WEBPUSHR_API_KEY")
