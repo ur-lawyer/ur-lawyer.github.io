@@ -90,7 +90,7 @@ def send_blog_post_notification(title, permalink, focus_kw):
     image_url = f"{SITE_DOMAIN}/images/{permalink.strip('/').split('/')[-1]}.webp"
     description = generate_description(title, focus_kw) # Generate description without focus_kw
     # Create notification message
-    notification_title = f"🆕 New Tutorial: {title[:80]}"
+    notification_title = f"{title[:80]}"
     notification_message = f"{description}"
     
     # Send notification
