@@ -101,7 +101,6 @@ def send_blog_post_notification(title, permalink, focus_kw):
         image_url=image_url
     )
 
-
 def send_segmented_notification(title, message, target_url, segment_id=None):
     """
     Send notification to specific segment
