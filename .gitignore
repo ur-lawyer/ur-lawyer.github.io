@@ -1,5 +1,9 @@
-_site
-.sass-cache
+*.gem
+.bundle
 .jekyll-cache
-.jekyll-metadata
-.DS_Store
+.sass-cache
+_site
+Gemfile.lock
+chrome_profile/
+debug_*.png
+gsc_progress.json
