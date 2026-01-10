@@ -149,8 +149,19 @@ def submit_url_to_gsc(url):
         time.sleep(3)
         
         # Check if we're logged in
-        if "accounts.google.com" in driver.current_url:
-            print("❌ Not logged in! Please run first_time_gsc_login.py first")
+        current_url = driver.current_url
+        if "accounts.google.com" in current_url or "ServiceLogin" in current_url:
+            print(f"❌ Not logged in! Redirected to login page.")
+            print(f"🔗 Current URL: {current_url}")
+            print(f"📄 Page Title: {driver.title}")
+            print(f"🍪 Cookies present: {len(driver.get_cookies())}")
+            
+            # Print cookie domains to debug
+            for c in driver.get_cookies():
+                print(f"   - {c['name']} ({c['domain']})")
+                
+            print("📸 Taking debug screenshot...")
+            driver.save_screenshot("gsc_login_fail.png")
             return False
         
         print("✅ Logged in successfully")
