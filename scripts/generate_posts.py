@@ -10,9 +10,6 @@ from keywords_handler import get_keyword_row, parse_keyword_row, remove_keyword_
 from article_generator import generate_article, generate_image_prompt, generate_description
 from image_generator import generate_image_freepik
 from gsc_automation import submit_url_to_gsc
-from google_sheets_logger import log_to_google_sheets
-from twitter_poster import post_to_twitter
-from linkedin_poster import post_to_linkedin
 from webpushr_notifier import send_blog_post_notification, get_subscriber_count
 
 
@@ -382,105 +379,6 @@ def main():
                 
                 print(f"\n📊 Indexing Status: {indexing_status}")
                 
-                
-                
-                
-                # Step 8: Log to Sheets
-                print(f"\n{'=' * 60}")
-                print("Step 8: Logging to Google Sheets")
-                print("=" * 60)
-                
-                try:
-                    log_to_google_sheets(
-                        title, focus_kw, permalink,
-                        image_file, article, indexing_status
-                    )
-                except Exception as e:
-                    print(f"⚠️ Sheets logging failed (non-critical): {e}")
-                
-                # Step 8: Create and Post to Twitter
-                print(f"\n{'=' * 60}")
-                print("Step 8: Creating & Posting to Twitter")
-                print("=" * 60)
-                
-                twitter_success = False
-                try:
-                    # Generate optimized Twitter content using ALL article data
-                    twitter_content, twitter_hashtags = create_twitter_post(
-                        title=title,
-                        permalink=permalink,
-                        focus_kw=focus_kw,
-                        semantic_kw=semantic_kw,
-                        article_content=article,
-                        image_path=image_file if os.path.exists(image_file) else None
-                    )
-                    
-                    print(f"📝 Generated Twitter Post:")
-                    print(f"   Title: {title}")
-                    print(f"   Hashtags: {', '.join(twitter_hashtags)}")
-                    print(f"   Length: {len(twitter_content)} chars")
-                    print(f"\n   Preview:")
-                    print(f"   {twitter_content[:150]}...")
-                    
-                    # Post to Twitter
-                    twitter_success = post_to_twitter(
-                        title=title,
-                        permalink=permalink,
-                        twitter_content=twitter_content,
-                        affiliate_links=affiliate_links
-                    )
-                    
-                    if twitter_success:
-                        print("✅ Successfully posted to Twitter!")
-                    else:
-                        print("⚠️ Twitter post skipped or failed (check credentials)")
-                        
-                except Exception as e:
-                    print(f"⚠️ Twitter posting failed (non-critical): {e}")
-                    import traceback
-                    traceback.print_exc()
-
-                # Step 9: Create and Post to LinkedIn
-                print(f"\n{'=' * 60}")
-                print("Step 9: Creating & Posting to LinkedIn")
-                print("=" * 60)
-                
-                linkedin_success = False
-                try:
-                    # Generate optimized LinkedIn content using ALL article data
-                    linkedin_content, linkedin_hashtags = create_linkedin_post(
-                        title=title,
-                        permalink=permalink,
-                        focus_kw=focus_kw,
-                        semantic_kw=semantic_kw,
-                        article_content=article,
-                        image_path=image_file if os.path.exists(image_file) else None
-                    )
-                    
-                    print(f"📝 Generated LinkedIn Post:")
-                    print(f"   Title: {title}")
-                    print(f"   Hashtags: {', '.join(linkedin_hashtags)}")
-                    print(f"   Length: {len(linkedin_content)} chars")
-                    print(f"\n   Preview:")
-                    print(f"   {linkedin_content[:150]}...")
-                    
-                    # Post to LinkedIn
-                    linkedin_success = post_to_linkedin(
-                        title=title,
-                        permalink=permalink,
-                        linkedin_content=linkedin_content,
-                        image_path=image_file if os.path.exists(image_file) else None
-                    )
-                    
-                    if linkedin_success:
-                        print("✅ Successfully posted to LinkedIn!")
-                    else:
-                        print("⚠️ LinkedIn post skipped or failed (check credentials)")
-                        
-                except Exception as e:
-                    print(f"⚠️ LinkedIn posting failed (non-critical): {e}")
-                    import traceback
-                    traceback.print_exc()
                     
                 # Step 10: Send Push Notification
                 print(f"\n{'=' * 60}")
