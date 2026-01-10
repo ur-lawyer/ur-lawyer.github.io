@@ -23,7 +23,7 @@ IMAGE_MAX_HEIGHT = 1080
 OPTIMIZE_IMAGE = True
 
 # Timing
-WAIT_TIME_BEFORE_INDEXING = 180  # seconds (3 minutes)
+WAIT_TIME_BEFORE_INDEXING = 10  # seconds (10 seconds)
 
 # API Keys (from environment)
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
