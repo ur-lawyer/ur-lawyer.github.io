@@ -86,19 +86,28 @@ def setup_chrome_driver(headless=None):
         # If we have cookies from environment, load them
         cookies = load_cookies_from_env()
         if cookies:
-            # Navigate to google.com first to set domain
-            driver.get("https://www.google.com")
-            time.sleep(1)
+            # Navigate to search.google.com first to set the correct domain
+            print(f"🔐 Loading authentication cookies...")
+            driver.get("https://search.google.com")
+            time.sleep(2)
             
             # Add each cookie
+            cookies_added = 0
             for cookie in cookies:
                 try:
-                    driver.add_cookie(cookie)
+                    # Ensure domain compatibility
+                    if 'domain' in cookie and 'google.com' in cookie['domain']:
+                        driver.add_cookie(cookie)
+                        cookies_added += 1
                 except Exception as e:
-                    # Some cookies may fail, that's ok
+                    # Some cookies may fail due to domain mismatch
                     pass
             
-            print(f"✅ Cookies loaded into browser")
+            print(f"✅ Added {cookies_added} cookies to browser")
+            
+            # Refresh to apply cookies
+            driver.refresh()
+            time.sleep(1)
         
         return driver
     except Exception as e:
