@@ -89,28 +89,48 @@ def setup_chrome_driver(headless=None):
         # If we have cookies from environment, load them
         cookies = load_cookies_from_env()
         if cookies:
-            # Navigate to google.com first - this is the best place to set session cookies
-            print(f"🔐 [NEW] Loading authentication cookies on google.com...")
-            driver.get("https://www.google.com")
+            print(f"🔐 [FIXED] Loading cookies across multiple Google domains...")
+            
+            # Load cookies on multiple Google domains to ensure they work
+            google_domains = [
+                "https://www.google.com",
+                "https://accounts.google.com", 
+                "https://search.google.com"
+            ]
+            
+            for domain_url in google_domains:
+                try:
+                    print(f"   Loading cookies on {domain_url}...")
+                    driver.get(domain_url)
+                    time.sleep(1)
+                    
+                    cookies_added = 0
+                    for cookie in cookies:
+                        try:
+                            # Selenium requires domain to start with a dot or be exact match
+                            # Strip leading dots if present
+                            cookie_copy = cookie.copy()
+                            if 'domain' in cookie_copy and cookie_copy['domain'].startswith('.'):
+                                cookie_copy['domain'] = cookie_copy['domain'][1:]
+                            
+                            driver.add_cookie(cookie_copy)
+                            cookies_added += 1
+                        except Exception as e:
+                            # Some cookies may fail due to domain mismatch - this is normal
+                            pass
+                    
+                    print(f"   ✅ Added {cookies_added} cookies to {domain_url}")
+                    
+                except Exception as e:
+                    print(f"   ⚠️  Error loading cookies on {domain_url}: {e}")
+                    continue
+            
+            # Final refresh on accounts.google.com to ensure authentication
+            print(f"🔄 Refreshing accounts.google.com to activate session...")
+            driver.get("https://accounts.google.com")
             time.sleep(2)
             
-            # Add each cookie
-            cookies_added = 0
-            for cookie in cookies:
-                try:
-                    # Ensure domain compatibility
-                    if 'domain' in cookie and 'google.com' in cookie['domain']:
-                        driver.add_cookie(cookie)
-                        cookies_added += 1
-                except Exception as e:
-                    # Some cookies may fail due to domain mismatch
-                    pass
-            
-            print(f"✅ Added {cookies_added} cookies to browser")
-            
-            # Refresh to apply cookies
-            driver.refresh()
-            time.sleep(1)
+            print(f"✅ Cookie loading complete!")
         
         return driver
     except Exception as e:
@@ -118,18 +138,19 @@ def setup_chrome_driver(headless=None):
         return None
 
 
-def submit_url_to_gsc(url):
+def submit_url_to_gsc(url, headless=None):
     """
     Submit single URL to Google Search Console
     
     Args:
         url: URL to submit for indexing
+        headless: Override headless mode
         
     Returns:
         bool: True if successful, False otherwise
     """
     print(f"\n{'=' * 60}")
-    print(f"🔍 Submitting URL to Google Search Console")
+    print(f"🔎 Submitting URL to Google Search Console")
     print(f"{'=' * 60}")
     print(f"🌐 URL: {url}")
     print(f"🏠 Property: {GSC_PROPERTY_URL}")
@@ -138,7 +159,7 @@ def submit_url_to_gsc(url):
     
     try:
         # Setup driver
-        driver = setup_chrome_driver()
+        driver = setup_chrome_driver(headless)
         if not driver:
             print("❌ Failed to setup Chrome driver")
             return False
@@ -149,7 +170,7 @@ def submit_url_to_gsc(url):
         driver.get(inspection_url)
         
         # Wait for page load
-        time.sleep(3)
+        time.sleep(5)  # Increased wait time
         
         # Check if we're logged in
         current_url = driver.current_url
@@ -160,14 +181,17 @@ def submit_url_to_gsc(url):
             print(f"🍪 Cookies present: {len(driver.get_cookies())}")
             
             # Print cookie domains to debug
+            print(f"🍪 Cookie domains:")
             for c in driver.get_cookies():
                 print(f"   - {c['name']} ({c['domain']})")
                 
             print("📸 Taking debug screenshot...")
-            driver.save_screenshot("gsc_login_fail.png")
+            driver.save_screenshot("/tmp/gsc_login_fail.png")
+            print(f"   Screenshot saved to /tmp/gsc_login_fail.png")
             return False
         
         print("✅ Logged in successfully")
+        print(f"✅ Current URL: {current_url}")
         
         # Find the URL input field
         print(f"🔍 Looking for URL input field...")
@@ -213,7 +237,7 @@ def submit_url_to_gsc(url):
         url_input.send_keys(Keys.RETURN)
         
         print(f"⏳ Waiting for inspection to complete...")
-        time.sleep(10)  # Increased wait time for page to fully load
+        time.sleep(10)  # Wait for inspection
         
         # Look for "Request Indexing" button
         print(f"🔍 Looking for 'Request Indexing' button...")
