@@ -40,6 +40,7 @@ jobs:
 
       - name: Generate blog post
         env:
+          GSC_COOKIES: ${{ secrets.GSC_COOKIES }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           FREEPIK_API_KEY: ${{ secrets.FREEPIK_API_KEY }}
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
@@ -72,4 +73,6 @@ jobs:
       - name: Cleanup Chrome profile
         if: always()
         run: |
-          python scripts/gsc_automation.py --cleanup
+          echo "🧹 Cleaning up Chrome profile..."
+          rm -rf "$HOME/.gsc_chrome_profile"
+          echo "✅ Chrome profile removed"

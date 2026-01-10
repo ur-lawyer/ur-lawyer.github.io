@@ -9,7 +9,6 @@ from config import *
 from keywords_handler import get_keyword_row, parse_keyword_row, remove_keyword_from_file, get_keywords_count
 from article_generator import generate_article, generate_image_prompt, generate_description
 from image_generator import generate_image_freepik
-from google_indexing import submit_to_google_indexing  # Fallback for when browser fails
 from gsc_automation import submit_url_to_gsc
 from google_sheets_logger import log_to_google_sheets
 from twitter_poster import post_to_twitter
@@ -358,43 +357,28 @@ def main():
                 
                 
                 
-                # Step 6: Submit to Google Search Console
+                # Step 6: Submit to Google Search Console (Browser Only)
                 print(f"\n{'=' * 60}")
                 print("Step 6: Submitting to Google Search Console")
                 print("=" * 60)
                 
                 indexing_status = "Not Attempted"
-                
-                # Try browser automation first
                 try:
                     URLS_TO_SUBMIT = post_url
                     print(f"📋 URLS_TO_SUBMIT: {URLS_TO_SUBMIT}")
-                    print(f"🔍 Trying GSC browser automation...")
                     
                     gsc_success = submit_url_to_gsc(URLS_TO_SUBMIT)
                     
                     if gsc_success:
                         indexing_status = "Success (GSC Browser)"
-                        print("✅ URL submitted via GSC Browser!")
+                        print("✅ URL submitted to Google Search Console!")
                     else:
-                        raise Exception("GSC browser automation returned False")
+                        indexing_status = "Failed (GSC Browser)"
+                        print("⚠️ GSC submission failed")
                         
                 except Exception as e:
-                    # If browser automation fails, fall back to API
-                    print(f"⚠️  GSC browser failed: {str(e)[:100]}")
-                    print(f"🔄 Falling back to Google Indexing API...")
-                    
-                    try:
-                        api_success = submit_to_google_indexing(post_url)
-                        if api_success:
-                            indexing_status = "Success (API Fallback)"
-                            print("✅ URL submitted via Google Indexing API!")
-                        else:
-                            indexing_status = "Failed (Both Methods)"
-                            print("❌ Both GSC browser and API failed")
-                    except Exception as api_error:
-                        indexing_status = f"Failed - {str(api_error)[:100]}"
-                        print(f"❌ API also failed: {api_error}")
+                    indexing_status = f"Failed - {str(e)[:100]}"
+                    print(f"⚠️ GSC automation failed: {e}")
                 
                 print(f"\n📊 Indexing Status: {indexing_status}")
                 

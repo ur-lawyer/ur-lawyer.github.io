@@ -2,6 +2,8 @@
 import os
 import sys
 import time
+import json
+import base64
 import shutil
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -15,9 +17,26 @@ from webdriver_manager.chrome import ChromeDriverManager
 from config import GSC_PROPERTY_URL, GSC_CHROME_PROFILE_PATH, GSC_MAX_RETRIES, GSC_HEADLESS
 
 
+def load_cookies_from_env():
+    """Load cookies from environment variable (GitHub Secrets)"""
+    cookies_env = os.getenv('GSC_COOKIES')
+    if not cookies_env:
+        return None
+    
+    try:
+        # Decode from base64
+        cookies_json = base64.b64decode(cookies_env).decode()
+        cookies = json.loads(cookies_json)
+        print(f"✅ Loaded {len(cookies)} cookies from environment")
+        return cookies
+    except Exception as e:
+        print(f"⚠️  Failed to load cookies from environment: {e}")
+        return None
+
+
 def setup_chrome_driver(headless=None):
     """
-    Setup Chrome driver with saved profile
+    Setup Chrome driver with saved profile or cookies
     
     Args:
         headless: Override headless mode from config
@@ -30,14 +49,16 @@ def setup_chrome_driver(headless=None):
     
     chrome_options = Options()
     
-    # Use saved profile for authentication (optional - for local use)
-    # In GitHub Actions, we'll proceed without a profile
-    if os.path.exists(GSC_CHROME_PROFILE_PATH):
+    # Check for cookies from environment first (GitHub Actions)
+    use_cookies = load_cookies_from_env() is not None
+    
+    # Use saved profile for authentication (local use)
+    if not use_cookies and os.path.exists(GSC_CHROME_PROFILE_PATH):
         chrome_options.add_argument(f"--user-data-dir={GSC_CHROME_PROFILE_PATH}")
         print(f"✅ Using saved profile: {GSC_CHROME_PROFILE_PATH}")
-    else:
-        print(f"ℹ️  No saved profile found - proceeding without authentication")
-        print(f"   Note: You may need to manually login on first use")
+    elif not use_cookies:
+        print(f"ℹ️  No saved profile or cookies found")
+        print(f"   Browser will start without authentication")
     
     # Chrome options for stability
     chrome_options.add_argument("--no-first-run")
@@ -61,22 +82,39 @@ def setup_chrome_driver(headless=None):
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=chrome_options)
         driver.set_page_load_timeout(30)
+        
+        # If we have cookies from environment, load them
+        cookies = load_cookies_from_env()
+        if cookies:
+            # Navigate to google.com first to set domain
+            driver.get("https://www.google.com")
+            time.sleep(1)
+            
+            # Add each cookie
+            for cookie in cookies:
+                try:
+                    driver.add_cookie(cookie)
+                except Exception as e:
+                    # Some cookies may fail, that's ok
+                    pass
+            
+            print(f"✅ Cookies loaded into browser")
+        
         return driver
     except Exception as e:
         print(f"❌ Error setting up Chrome driver: {e}")
         return None
 
 
-def submit_url_to_gsc(url, headless=None):
+def submit_url_to_gsc(url):
     """
-    Submit URL to Google Search Console for indexing
+    Submit single URL to Google Search Console
     
     Args:
         url: URL to submit for indexing
-        headless: Override headless mode from config
         
     Returns:
-        bool: Success status
+        bool: True if successful, False otherwise
     """
     print(f"\n{'=' * 60}")
     print(f"🔍 Submitting URL to Google Search Console")
