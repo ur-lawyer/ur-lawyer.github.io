@@ -126,7 +126,7 @@ def submit_url_to_gsc(url):
     
     try:
         # Setup driver
-        driver = setup_chrome_driver(headless)
+        driver = setup_chrome_driver()
         if not driver:
             print("❌ Failed to setup Chrome driver")
             return False
