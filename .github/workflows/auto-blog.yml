@@ -70,7 +70,7 @@ jobs:
 
       - name: Upload screenshots on failure
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: gsc-debug-screenshots
           path: /tmp/gsc*.png
