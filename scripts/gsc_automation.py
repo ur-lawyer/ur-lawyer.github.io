@@ -30,14 +30,14 @@ def setup_chrome_driver(headless=None):
     
     chrome_options = Options()
     
-    # Use saved profile for authentication
+    # Use saved profile for authentication (optional - for local use)
+    # In GitHub Actions, we'll proceed without a profile
     if os.path.exists(GSC_CHROME_PROFILE_PATH):
         chrome_options.add_argument(f"--user-data-dir={GSC_CHROME_PROFILE_PATH}")
         print(f"✅ Using saved profile: {GSC_CHROME_PROFILE_PATH}")
     else:
-        print(f"⚠️  Warning: Profile not found at {GSC_CHROME_PROFILE_PATH}")
-        print(f"   Run first_time_gsc_login.py first to authenticate")
-        return None
+        print(f"ℹ️  No saved profile found - proceeding without authentication")
+        print(f"   Note: You may need to manually login on first use")
     
     # Chrome options for stability
     chrome_options.add_argument("--no-first-run")
@@ -152,7 +152,7 @@ def submit_url_to_gsc(url, headless=None):
         url_input.send_keys(Keys.RETURN)
         
         print(f"⏳ Waiting for inspection to complete...")
-        time.sleep(5)
+        time.sleep(10)  # Increased wait time for page to fully load
         
         # Look for "Request Indexing" button
         print(f"🔍 Looking for 'Request Indexing' button...")
@@ -161,6 +161,7 @@ def submit_url_to_gsc(url, headless=None):
             "//button[contains(text(), 'Request indexing')]",
             "//button[contains(text(), 'REQUEST INDEXING')]",
             "//span[contains(text(), 'Request indexing')]/ancestor::button",
+            "//button[contains(@aria-label, 'Request indexing')]",
         ]
         
         request_button = None
