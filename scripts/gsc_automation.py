@@ -1,19 +1,25 @@
-"""Automate URL submission to Google Search Console using Selenium"""
+"""Automate URL submission to Google Search Console using Selenium with undetected-chromedriver"""
 import os
 import sys
 import time
 import json
 import base64
 import shutil
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
+try:
+    import undetected_chromedriver as uc
+    UNDETECTED_AVAILABLE = True
+except ImportError:
+    UNDETECTED_AVAILABLE = False
+    from selenium import webdriver
+    from selenium.webdriver.chrome.service import Service
+    from selenium.webdriver.chrome.options import Options
+    from webdriver_manager.chrome import ChromeDriverManager
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from webdriver_manager.chrome import ChromeDriverManager
 from config import GSC_PROPERTY_URL, GSC_CHROME_PROFILE_PATH, GSC_MAX_RETRIES, GSC_HEADLESS
 
 
@@ -36,7 +42,7 @@ def load_cookies_from_env():
 
 def setup_chrome_driver(headless=None):
     """
-    Setup Chrome driver with saved profile or cookies
+    Setup Chrome driver with anti-detection measures
     
     Args:
         headless: Override headless mode from config
@@ -47,94 +53,127 @@ def setup_chrome_driver(headless=None):
     if headless is None:
         headless = GSC_HEADLESS
     
-    chrome_options = Options()
-    
     # Check for cookies from environment first (GitHub Actions)
     use_cookies = load_cookies_from_env() is not None
     
-    # Use saved profile for authentication (local use)
-    if not use_cookies and os.path.exists(GSC_CHROME_PROFILE_PATH):
-        chrome_options.add_argument(f"--user-data-dir={GSC_CHROME_PROFILE_PATH}")
-        print(f"✅ Using saved profile: {GSC_CHROME_PROFILE_PATH}")
-    elif not use_cookies:
-        print(f"ℹ️  No saved profile or cookies found")
-        print(f"   Browser will start without authentication")
-    
-    # Chrome options for stability
-    chrome_options.add_argument("--no-first-run")
-    chrome_options.add_argument("--no-default-browser-check")
-    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    chrome_options.add_experimental_option('useAutomationExtension', False)
-    
-    # Set a real User-Agent to avoid detection
-    chrome_options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-    
-    # Headless mode for CI/CD
-    if headless:
-        chrome_options.add_argument("--headless=new")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-        chrome_options.add_argument("--disable-gpu")
-        print("🔇 Running in headless mode")
-    
-    # Window size for consistent behavior
-    chrome_options.add_argument("--window-size=1920,1080")
+    # Check if we have saved profile (local use)
+    use_profile = not use_cookies and os.path.exists(GSC_CHROME_PROFILE_PATH)
     
     try:
-        service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service, options=chrome_options)
-        driver.set_page_load_timeout(30)
+        if UNDETECTED_AVAILABLE:
+            print("✅ Using undetected-chromedriver (anti-bot)")
+            
+            # Options for undetected-chromedriver
+            options = uc.ChromeOptions()
+            
+            # Use saved profile if available
+            if use_profile:
+                options.add_argument(f"--user-data-dir={GSC_CHROME_PROFILE_PATH}")
+                print(f"✅ Using saved profile: {GSC_CHROME_PROFILE_PATH}")
+            
+            # Additional stealth options
+            options.add_argument("--disable-blink-features=AutomationControlled")
+            options.add_argument("--no-first-run")
+            options.add_argument("--no-default-browser-check")
+            options.add_argument("--window-size=1920,1080")
+            
+            # Headless mode (experimental with undetected-chromedriver)
+            if headless:
+                options.add_argument("--headless=new")
+                options.add_argument("--no-sandbox")
+                options.add_argument("--disable-dev-shm-usage")
+                print("🔇 Running in headless mode")
+            
+            # Create driver with undetected-chromedriver
+            driver = uc.Chrome(options=options, version_main=None)
+            driver.set_page_load_timeout(30)
+            
+        else:
+            print("⚠️  undetected-chromedriver not available, using regular selenium")
+            print("   Install it: pip install undetected-chromedriver")
+            
+            chrome_options = Options()
+            
+            if use_profile:
+                chrome_options.add_argument(f"--user-data-dir={GSC_CHROME_PROFILE_PATH}")
+                print(f"✅ Using saved profile: {GSC_CHROME_PROFILE_PATH}")
+            
+            # Chrome options
+            chrome_options.add_argument("--no-first-run")
+            chrome_options.add_argument("--no-default-browser-check")
+            chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+            chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+            chrome_options.add_experimental_option('useAutomationExtension', False)
+            chrome_options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+            chrome_options.add_argument("--window-size=1920,1080")
+            
+            if headless:
+                chrome_options.add_argument("--headless=new")
+                chrome_options.add_argument("--no-sandbox")
+                chrome_options.add_argument("--disable-dev-shm-usage")
+                chrome_options.add_argument("--disable-gpu")
+                print("🔇 Running in headless mode")
+            
+            service = Service(ChromeDriverManager().install())
+            driver = webdriver.Chrome(service=service, options=chrome_options)
+            driver.set_page_load_timeout(30)
         
         # If we have cookies from environment, load them
         cookies = load_cookies_from_env()
         if cookies:
-            print(f"🔐 [FIXED] Loading cookies across multiple Google domains...")
+            print(f"🔐 Loading authentication cookies...")
             
-            # Load cookies on multiple Google domains to ensure they work
-            google_domains = [
-                "https://www.google.com",
-                "https://accounts.google.com", 
-                "https://search.google.com"
-            ]
-            
-            for domain_url in google_domains:
-                try:
-                    print(f"   Loading cookies on {domain_url}...")
-                    driver.get(domain_url)
-                    time.sleep(1)
-                    
-                    cookies_added = 0
-                    for cookie in cookies:
-                        try:
-                            # Selenium requires domain to start with a dot or be exact match
-                            # Strip leading dots if present
-                            cookie_copy = cookie.copy()
-                            if 'domain' in cookie_copy and cookie_copy['domain'].startswith('.'):
-                                cookie_copy['domain'] = cookie_copy['domain'][1:]
-                            
-                            driver.add_cookie(cookie_copy)
-                            cookies_added += 1
-                        except Exception as e:
-                            # Some cookies may fail due to domain mismatch - this is normal
-                            pass
-                    
-                    print(f"   ✅ Added {cookies_added} cookies to {domain_url}")
-                    
-                except Exception as e:
-                    print(f"   ⚠️  Error loading cookies on {domain_url}: {e}")
-                    continue
-            
-            # Final refresh on accounts.google.com to ensure authentication
-            print(f"🔄 Refreshing accounts.google.com to activate session...")
-            driver.get("https://accounts.google.com")
+            # Navigate to google.com first
+            driver.get("https://www.google.com")
             time.sleep(2)
             
-            print(f"✅ Cookie loading complete!")
+            # Add cookies
+            cookies_added = 0
+            for cookie in cookies:
+                try:
+                    # Clean up cookie format for Selenium
+                    cookie_clean = {
+                        'name': cookie['name'],
+                        'value': cookie['value'],
+                        'domain': cookie['domain'].lstrip('.'),
+                        'path': cookie.get('path', '/'),
+                        'secure': cookie.get('secure', False),
+                        'httpOnly': cookie.get('httpOnly', False)
+                    }
+                    
+                    # Add expiry if present
+                    if 'expires' in cookie and cookie['expires']:
+                        cookie_clean['expiry'] = int(cookie['expires'] / 1000000 - 11644473600)
+                    
+                    driver.add_cookie(cookie_clean)
+                    cookies_added += 1
+                except Exception as e:
+                    # Skip problematic cookies
+                    pass
+            
+            print(f"✅ Added {cookies_added} cookies")
+            
+            # Refresh to activate session
+            driver.refresh()
+            time.sleep(2)
+            
+            # Navigate to accounts.google.com to verify session
+            print(f"🔄 Verifying authentication...")
+            driver.get("https://accounts.google.com")
+            time.sleep(3)
+            
+            # Check if we're logged in
+            if "ServiceLogin" not in driver.current_url and "signin" not in driver.current_url:
+                print(f"✅ Authentication verified!")
+            else:
+                print(f"⚠️  May not be authenticated - will try anyway")
         
         return driver
+        
     except Exception as e:
         print(f"❌ Error setting up Chrome driver: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
@@ -169,37 +208,39 @@ def submit_url_to_gsc(url, headless=None):
         print(f"\n📍 Navigating to URL Inspection tool...")
         driver.get(inspection_url)
         
-        # Wait for page load
-        time.sleep(5)  # Increased wait time
+        # Wait and check for redirects
+        time.sleep(5)
         
         # Check if we're logged in
         current_url = driver.current_url
         if "accounts.google.com" in current_url or "ServiceLogin" in current_url:
-            print(f"❌ Not logged in! Redirected to login page.")
-            print(f"🔗 Current URL: {current_url}")
-            print(f"📄 Page Title: {driver.title}")
+            print(f"❌ Not logged in! Redirected to: {current_url}")
+            
+            # Take screenshot for debugging
+            screenshot_path = "/tmp/gsc_login_fail.png"
+            driver.save_screenshot(screenshot_path)
+            print(f"📸 Screenshot saved: {screenshot_path}")
+            
+            # Print page source snippet for debugging
+            print(f"\n🔍 Page title: {driver.title}")
             print(f"🍪 Cookies present: {len(driver.get_cookies())}")
             
-            # Print cookie domains to debug
-            print(f"🍪 Cookie domains:")
-            for c in driver.get_cookies():
-                print(f"   - {c['name']} ({c['domain']})")
-                
-            print("📸 Taking debug screenshot...")
-            driver.save_screenshot("/tmp/gsc_login_fail.png")
-            print(f"   Screenshot saved to /tmp/gsc_login_fail.png")
             return False
         
-        print("✅ Logged in successfully")
-        print(f"✅ Current URL: {current_url}")
+        print("✅ Successfully accessed Google Search Console")
+        print(f"✅ Current page: {driver.title}")
         
         # Find the URL input field
-        print(f"🔍 Looking for URL input field...")
+        print(f"\n🔍 Looking for URL input field...")
         
-        # Try multiple selectors as Google may change their UI
+        # Wait for page to fully load
+        time.sleep(3)
+        
+        # Try multiple selectors
         selectors = [
             "input[type='text'][aria-label*='URL']",
             "input[type='text'][placeholder*='URL']",
+            "input[type='url']",
             "input.devsite-search-field",
             "input[jsname]",
         ]
@@ -210,34 +251,50 @@ def submit_url_to_gsc(url, headless=None):
                 url_input = WebDriverWait(driver, 5).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, selector))
                 )
-                if url_input:
+                if url_input and url_input.is_displayed():
                     print(f"✅ Found input field with selector: {selector}")
                     break
+                else:
+                    url_input = None
             except TimeoutException:
                 continue
         
         if not url_input:
-            # Try finding by text input that's visible
+            # Try finding any visible text input
             try:
-                url_input = driver.find_element(By.CSS_SELECTOR, "input[type='text']")
-                print("✅ Found generic text input field")
+                inputs = driver.find_elements(By.CSS_SELECTOR, "input[type='text']")
+                for inp in inputs:
+                    if inp.is_displayed():
+                        url_input = inp
+                        print("✅ Found visible text input field")
+                        break
             except NoSuchElementException:
-                print("❌ Could not find URL input field")
-                print("📸 Taking screenshot for debugging...")
-                driver.save_screenshot("/tmp/gsc_error.png")
-                print(f"   Screenshot saved to /tmp/gsc_error.png")
-                return False
+                pass
         
-        # Clear and enter URL
+        if not url_input:
+            print("❌ Could not find URL input field")
+            screenshot_path = "/tmp/gsc_no_input.png"
+            driver.save_screenshot(screenshot_path)
+            print(f"📸 Screenshot saved: {screenshot_path}")
+            return False
+        
+        # Enter URL with human-like typing
         print(f"⌨️  Entering URL...")
+        url_input.click()
+        time.sleep(0.5)
         url_input.clear()
         time.sleep(0.5)
-        url_input.send_keys(url)
-        time.sleep(0.5)
+        
+        # Type slowly to mimic human
+        for char in url:
+            url_input.send_keys(char)
+            time.sleep(0.05)
+        
+        time.sleep(1)
         url_input.send_keys(Keys.RETURN)
         
         print(f"⏳ Waiting for inspection to complete...")
-        time.sleep(10)  # Wait for inspection
+        time.sleep(15)  # Give it time to analyze
         
         # Look for "Request Indexing" button
         print(f"🔍 Looking for 'Request Indexing' button...")
@@ -263,32 +320,29 @@ def submit_url_to_gsc(url, headless=None):
         
         if not request_button:
             print("⚠️  'Request Indexing' button not found")
-            print("ℹ️  Possible reasons:")
-            print("   - URL is already in queue")
-            print("   - URL has recently been submitted")
-            print("   - Page is still loading")
             
-            # Check if already submitted
+            # Check page for status messages
             page_text = driver.page_source.lower()
-            if "already" in page_text or "queue" in page_text:
+            if "already" in page_text or "queue" in page_text or "recently requested" in page_text:
                 print("✅ URL appears to already be in indexing queue")
                 return True
             
-            # Take screenshot for debugging
-            print("📸 Taking screenshot for debugging...")
-            driver.save_screenshot("/tmp/gsc_no_button.png")
-            print(f"   Screenshot saved to /tmp/gsc_no_button.png")
+            # Take screenshot
+            screenshot_path = "/tmp/gsc_no_button.png"
+            driver.save_screenshot(screenshot_path)
+            print(f"📸 Screenshot saved: {screenshot_path}")
             return False
         
-        # Click the button
+        # Click the button with delay
         print(f"🖱️  Clicking 'Request Indexing' button...")
+        time.sleep(1)
         request_button.click()
         
         # Wait for confirmation
         print(f"⏳ Waiting for confirmation...")
-        time.sleep(5)
+        time.sleep(8)
         
-        # Check for success message
+        # Check for success
         try:
             success_selectors = [
                 "//span[contains(text(), 'Indexing requested')]",
@@ -306,7 +360,7 @@ def submit_url_to_gsc(url, headless=None):
                 except TimeoutException:
                     continue
             
-            # If no explicit success message, check page state
+            # Check page text
             page_text = driver.page_source.lower()
             if "requested" in page_text or "submitted" in page_text:
                 print("✅ SUCCESS! URL appears to be submitted")
@@ -317,7 +371,6 @@ def submit_url_to_gsc(url, headless=None):
             
         except Exception as e:
             print(f"⚠️  Error checking confirmation: {e}")
-            # Assume success if we got this far without errors
             print("✅ Assuming success (no errors during submission)")
             return True
         
@@ -329,82 +382,9 @@ def submit_url_to_gsc(url, headless=None):
         
     finally:
         if driver:
-            print(f"🔒 Closing browser...")
+            print(f"\n🔒 Closing browser...")
+            time.sleep(2)
             driver.quit()
-
-
-def submit_urls_batch(urls, headless=None):
-    """
-    Submit multiple URLs to Google Search Console
-    
-    Args:
-        urls: List of URLs to submit
-        headless: Override headless mode from config
-        
-    Returns:
-        dict: Results with success/failure counts
-    """
-    print(f"\n{'=' * 60}")
-    print(f"📋 Batch URL Submission")
-    print(f"{'=' * 60}")
-    print(f"📊 Total URLs: {len(urls)}")
-    
-    results = {
-        'success': 0,
-        'failed': 0,
-        'urls_success': [],
-        'urls_failed': []
-    }
-    
-    for i, url in enumerate(urls, 1):
-        print(f"\n{'=' * 60}")
-        print(f"Processing URL {i}/{len(urls)}")
-        print(f"{'=' * 60}")
-        
-        success = submit_url_to_gsc(url, headless)
-        
-        if success:
-            results['success'] += 1
-            results['urls_success'].append(url)
-        else:
-            results['failed'] += 1
-            results['urls_failed'].append(url)
-        
-        # Wait between submissions to avoid rate limiting
-        if i < len(urls):
-            print(f"\n⏳ Waiting 10 seconds before next submission...")
-            time.sleep(10)
-    
-    # Print summary
-    print(f"\n{'=' * 60}")
-    print(f"📊 Batch Submission Complete")
-    print(f"{'=' * 60}")
-    print(f"✅ Successful: {results['success']}")
-    print(f"❌ Failed: {results['failed']}")
-    
-    return results
-
-
-def cleanup_chrome_profile():
-    """
-    Delete Chrome profile directory
-    Use this to clean up after GitHub Actions workflow
-    """
-    print(f"\n{'=' * 60}")
-    print(f"🧹 Cleaning up Chrome profile")
-    print(f"{'=' * 60}")
-    
-    if os.path.exists(GSC_CHROME_PROFILE_PATH):
-        try:
-            shutil.rmtree(GSC_CHROME_PROFILE_PATH)
-            print(f"✅ Profile deleted: {GSC_CHROME_PROFILE_PATH}")
-            return True
-        except Exception as e:
-            print(f"❌ Error deleting profile: {e}")
-            return False
-    else:
-        print(f"ℹ️  Profile does not exist: {GSC_CHROME_PROFILE_PATH}")
-        return True
 
 
 def main():
@@ -414,21 +394,19 @@ def main():
     parser = argparse.ArgumentParser(description='Submit URLs to Google Search Console')
     parser.add_argument('--url', type=str, help='Single URL to submit')
     parser.add_argument('--urls', type=str, nargs='+', help='Multiple URLs to submit')
-    parser.add_argument('--cleanup', action='store_true', help='Cleanup Chrome profile')
     parser.add_argument('--visible', action='store_true', help='Run with visible browser (not headless)')
     
     args = parser.parse_args()
-    
-    if args.cleanup:
-        cleanup_chrome_profile()
-        return
     
     headless = not args.visible
     
     if args.url:
         submit_url_to_gsc(args.url, headless=headless)
     elif args.urls:
-        submit_urls_batch(args.urls, headless=headless)
+        for url in args.urls:
+            submit_url_to_gsc(url, headless=headless)
+            if len(args.urls) > 1:
+                time.sleep(10)
     else:
         print("❌ Please provide --url or --urls argument")
         parser.print_help()
