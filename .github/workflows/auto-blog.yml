@@ -22,24 +22,34 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install google-genai pillow requests google-auth google-api-python-client tweepy selenium webdriver-manager
+          pip install google-genai pillow requests google-auth google-api-python-client tweepy selenium webdriver-manager undetected-chromedriver
           
-      - name: Setup Chrome and ChromeDriver
+      - name: Setup Chrome and Virtual Display
         run: |
-          # Install Chrome and ChromeDriver
+          # Install Chrome and dependencies
           sudo apt-get update
-          sudo apt-get install -y chromium-browser chromium-chromedriver xvfb
-          
-          # Setup display for headless Chrome
-          export DISPLAY=:99
-          sudo Xvfb :99 -screen 0 1920x1080x24 &
+          sudo apt-get install -y chromium-browser chromium-chromedriver xvfb x11-utils
           
           # Verify installation
           chromium-browser --version
           chromedriver --version
+          
+          echo "✅ Chrome and Xvfb installed"
+
+      - name: Start Virtual Display
+        run: |
+          # Start Xvfb in background
+          Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
+          sleep 2
+          
+          # Verify it's running
+          ps aux | grep Xvfb
+          
+          echo "✅ Virtual display started on :99"
 
       - name: Generate blog post
         env:
+          DISPLAY: ":99"  # Tell Chrome to use virtual display
           GSC_COOKIES: ${{ secrets.GSC_COOKIES }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           FREEPIK_API_KEY: ${{ secrets.FREEPIK_API_KEY }}
@@ -57,6 +67,14 @@ jobs:
           WEBPUSHR_AUTH_TOKEN: ${{ secrets.WEBPUSHR_AUTH_TOKEN }}
         run: |
           python scripts/generate_posts.py
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: gsc-debug-screenshots
+          path: /tmp/gsc*.png
+          retention-days: 7
 
       - name: Commit & Push changes
         run: |

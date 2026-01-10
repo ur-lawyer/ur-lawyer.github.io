@@ -32,10 +32,14 @@ GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
 GOOGLE_SPREADSHEET_ID = os.environ.get("GOOGLE_SPREADSHEET_ID")
 
 # Google Search Console settings
-GSC_PROPERTY_URL = "https://ur-lawyer.github.io"
+GSC_PROPERTY_URL = os.getenv("GSC_PROPERTY_URL", "https://ur-lawyer.github.io/")
 GSC_CHROME_PROFILE_PATH = os.path.join(os.path.expanduser("~"), ".gsc_chrome_profile")
+
+# IMPORTANT: Set to False for GitHub Actions (using Xvfb virtual display)
+# Headless mode gets blocked by Google, but Xvfb allows "visible" browser in CI
+GSC_HEADLESS = False
+
 GSC_MAX_RETRIES = 3
-GSC_HEADLESS = True  # Run in headless mode for CI/CD
 GSC_BROWSER_ENABLED = True  # Browser automation is the primary indexing method
 
 # Create directories
