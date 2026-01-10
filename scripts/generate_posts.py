@@ -9,7 +9,7 @@ from config import *
 from keywords_handler import get_keyword_row, parse_keyword_row, remove_keyword_from_file, get_keywords_count
 from article_generator import generate_article, generate_image_prompt, generate_description
 from image_generator import generate_image_freepik
-from google_indexing import submit_to_google_indexing, check_indexing_status
+from gsc_automation import submit_url_to_gsc
 from google_sheets_logger import log_to_google_sheets
 from twitter_poster import post_to_twitter
 from linkedin_poster import post_to_linkedin
@@ -355,46 +355,36 @@ def main():
                     print(f"⏰ Time remaining: {minutes}m {seconds}s", end='\r')
                     time.sleep(30)
                 
-                print(f"\n✅ Wait complete!")
                 
-                # Step 6: Submit to Google
+                # Step 6: Submit to Google Search Console (Browser Automation)
                 print(f"\n{'=' * 60}")
-                print("Step 6: Submitting to Google")
+                print("Step 6: Submitting to Google Search Console")
                 print("=" * 60)
                 
                 indexing_status = "Not Attempted"
                 try:
-                    success = submit_to_google_indexing(post_url)
-                    indexing_status = "Success" if success else "Failed - See Logs"
+                    # Use the URL as URLS_TO_SUBMIT variable as requested
+                    URLS_TO_SUBMIT = post_url
+                    print(f"📋 URLS_TO_SUBMIT: {URLS_TO_SUBMIT}")
+                    
+                    gsc_success = submit_url_to_gsc(URLS_TO_SUBMIT)
+                    
+                    if gsc_success:
+                        indexing_status = "Success (GSC Browser)"
+                        print("✅ URL submitted to Google Search Console!")
+                    else:
+                        indexing_status = "Failed (GSC Browser)"
+                        print("⚠️ GSC submission failed")
+                        
                 except Exception as e:
                     indexing_status = f"Failed - {str(e)[:100]}"
-                    print(f"⚠️ Indexing failed (non-critical): {e}")
+                    print(f"⚠️ GSC automation failed (non-critical): {e}")
+                    import traceback
+                    traceback.print_exc()
                 
-                # Step 7: Check indexing status
-                try:
-                    status_result = check_indexing_status(post_url)
-                    
-                    if status_result is None:
-                        print(f"⚠️ Could not verify indexing status - check credentials")
-                        indexing_status += " (Status: Unverified)"
-                        
-                    elif status_result == {} or 'latestUpdate' not in status_result:
-                        print(f"ℹ️ No indexing history found (may take a moment to appear)")
-                        indexing_status += " (Status: Pending)"
-                        
-                    elif status_result.get('latestUpdate', {}).get('type') == 'URL_UPDATED':
-                        notify_time = status_result['latestUpdate']['notifyTime']
-                        print(f"✅ Confirmed in indexing queue at {notify_time}")
-                        indexing_status = "Success (Confirmed in Queue)"
-                        
-                    elif status_result.get('latestUpdate', {}).get('type') == 'URL_DELETED':
-                        notify_time = status_result['latestUpdate']['notifyTime']
-                        print(f"🗑️ URL marked for deletion at {notify_time}")
-                        indexing_status = "Deleted"
-                        
-                except Exception as e:
-                    print(f"⚠️ Error checking indexing status: {e}")
-                    indexing_status += " (Verification Failed)"
+                print(f"\n📊 Indexing Status: {indexing_status}")
+                
+                
                 
                 # Step 8: Log to Sheets
                 print(f"\n{'=' * 60}")
@@ -409,9 +399,9 @@ def main():
                 except Exception as e:
                     print(f"⚠️ Sheets logging failed (non-critical): {e}")
                 
-                # Step 9: Create and Post to Twitter
+                # Step 8: Create and Post to Twitter
                 print(f"\n{'=' * 60}")
-                print("Step 9: Creating & Posting to Twitter")
+                print("Step 8: Creating & Posting to Twitter")
                 print("=" * 60)
                 
                 twitter_success = False
@@ -451,9 +441,9 @@ def main():
                     import traceback
                     traceback.print_exc()
 
-                # Step 10: Create and Post to LinkedIn
+                # Step 9: Create and Post to LinkedIn
                 print(f"\n{'=' * 60}")
-                print("Step 10: Creating & Posting to LinkedIn")
+                print("Step 9: Creating & Posting to LinkedIn")
                 print("=" * 60)
                 
                 linkedin_success = False
@@ -493,9 +483,9 @@ def main():
                     import traceback
                     traceback.print_exc()
                     
-                # Step 11: Send Push Notification
+                # Step 10: Send Push Notification
                 print(f"\n{'=' * 60}")
-                print("Step 11: Sending Push Notification")
+                print("Step 10: Sending Push Notification")
                 print("=" * 60)
 
                 try:
@@ -503,9 +493,9 @@ def main():
                 except Exception as e:
                     print(f"⚠️ Push notification failed (non-critical): {e}")
             
-            # Step 12: Remove keyword after success
+            # Step 11: Remove keyword after success
             print(f"\n{'=' * 60}")
-            print("Step 12: Removing Keyword from File")
+            print("Step 11: Removing Keyword from File")
             print("=" * 60)
             remove_keyword_from_file()
             print("✅ Keyword removed from keywords.txt")

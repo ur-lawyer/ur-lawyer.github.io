@@ -36,6 +36,7 @@ GSC_PROPERTY_URL = "https://ur-lawyer.github.io"
 GSC_CHROME_PROFILE_PATH = os.path.join(os.path.expanduser("~"), ".gsc_chrome_profile")
 GSC_MAX_RETRIES = 3
 GSC_HEADLESS = True  # Run in headless mode for CI/CD
+GSC_BROWSER_ENABLED = True  # Browser automation is the primary indexing method
 
 # Create directories
 os.makedirs(POSTS_DIR, exist_ok=True)

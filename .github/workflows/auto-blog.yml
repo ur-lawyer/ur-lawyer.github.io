@@ -22,7 +22,21 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install google-genai pillow requests google-auth google-api-python-client tweepy
+          pip install google-genai pillow requests google-auth google-api-python-client tweepy selenium webdriver-manager
+          
+      - name: Setup Chrome and ChromeDriver
+        run: |
+          # Install Chrome and ChromeDriver
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser chromium-chromedriver xvfb
+          
+          # Setup display for headless Chrome
+          export DISPLAY=:99
+          sudo Xvfb :99 -screen 0 1920x1080x24 &
+          
+          # Verify installation
+          chromium-browser --version
+          chromedriver --version
 
       - name: Generate blog post
         env:
@@ -54,3 +68,8 @@ jobs:
 
           git commit -m "${TITLES:-new post}" || exit 0
           git push origin master
+
+      - name: Cleanup Chrome profile
+        if: always()
+        run: |
+          python scripts/gsc_automation.py --cleanup
