@@ -408,16 +408,16 @@ def main():
         #     continue
     
     # Final summary
-    print(f"\n{'=' * 60}")
-    print("🎉 WORKFLOW COMPLETE")
-    print("=" * 60)
-    print(f"✅ Posts generated: {posts_generated}")
-    print(f"📊 Keywords remaining: {get_keywords_count()}")
-    print(f"\n📱 Social Media Summary:")
-    print(f"   • All posts automatically shared to Twitter & LinkedIn")
-    print(f"   • Smart hashtag generation based on article content")
-    print(f"   • Platform-optimized formatting")
-    print("=" * 60)
+    # print(f"\n{'=' * 60}")
+    # print("🎉 WORKFLOW COMPLETE")
+    # print("=" * 60)
+    # print(f"✅ Posts generated: {posts_generated}")
+    # print(f"📊 Keywords remaining: {get_keywords_count()}")
+    # print(f"\n📱 Social Media Summary:")
+    # print(f"   • All posts automatically shared to Twitter & LinkedIn")
+    # print(f"   • Smart hashtag generation based on article content")
+    # print(f"   • Platform-optimized formatting")
+    # print("=" * 60)
 
 
 if __name__ == "__main__":
