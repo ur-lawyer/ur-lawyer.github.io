@@ -10,7 +10,6 @@ from config import *
 from keywords_handler import get_keyword_row, parse_keyword_row, remove_keyword_from_file, get_keywords_count
 from article_generator import generate_article, generate_image_prompt, generate_description
 from image_generator import generate_image_freepik
-from gsc_automation import submit_url_to_gsc
 from webpushr_notifier import send_blog_post_notification, get_subscriber_count
 
 
