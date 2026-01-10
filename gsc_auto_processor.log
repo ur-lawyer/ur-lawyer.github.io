@@ -1,0 +1,50 @@
+[2026-01-11 02:38:10] ============================================================
+[2026-01-11 02:38:10] 🤖 GSC Auto Queue Processor Started (with Video Recording)
+[2026-01-11 02:38:10] 📁 Repository: /Users/sushilmohan/Documents/ur-lawyer.github.io
+[2026-01-11 02:38:10] 📝 Log file: /Users/sushilmohan/Documents/ur-lawyer.github.io/gsc_auto_processor.log
+[2026-01-11 02:38:10] 🎥 Recordings: /Users/sushilmohan/Documents/ur-lawyer.github.io/scripts/recordings/
+[2026-01-11 02:38:10] ⏱️  Check interval: 300s
+[2026-01-11 02:38:10] ============================================================
+[2026-01-11 02:38:10] 
+🔄 Initial check for pending URLs...
+[2026-01-11 02:38:10] 📥 Pulling latest changes from GitHub...
+[2026-01-11 02:38:13] ⚠️  Git pull failed: There is no tracking information for the current branch.
+Please specify which branch you want to merge with.
+See git-pull(1) for details.
+
+    git pull <remote> <branch>
+
+If you wish to set tracking information for this branch you can do so with:
+
+    git branch --set-upstream-to=origin/<branch> master
+
+
+[2026-01-11 02:38:13] ℹ️  No pending URLs to process
+[2026-01-11 02:38:13] 
+👀 Now monitoring for new URLs every 5 minutes...
+[2026-01-11 02:40:46] 
+🛑 Processor stopped by user
+[2026-01-11 02:41:26] ============================================================
+[2026-01-11 02:41:26] 🤖 GSC Auto Queue Processor Started (with Video Recording)
+[2026-01-11 02:41:26] 📁 Repository: /Users/sushilmohan/Documents/ur-lawyer.github.io
+[2026-01-11 02:41:26] 📝 Log file: /Users/sushilmohan/Documents/ur-lawyer.github.io/gsc_auto_processor.log
+[2026-01-11 02:41:26] 🎥 Recordings: /Users/sushilmohan/Documents/ur-lawyer.github.io/scripts/recordings/
+[2026-01-11 02:41:26] ⏱️  Check interval: 300s
+[2026-01-11 02:41:26] ============================================================
+[2026-01-11 02:41:26] 
+🔄 Initial check for pending URLs...
+[2026-01-11 02:41:26] 📥 Pulling latest changes from GitHub...
+[2026-01-11 02:41:30] ⚠️  Git pull failed: There is no tracking information for the current branch.
+Please specify which branch you want to merge with.
+See git-pull(1) for details.
+
+    git pull <remote> <branch>
+
+If you wish to set tracking information for this branch you can do so with:
+
+    git branch --set-upstream-to=origin/<branch> master
+
+
+[2026-01-11 02:41:30] ℹ️  No pending URLs to process
+[2026-01-11 02:41:30] 
+👀 Now monitoring for new URLs every 5 minutes...

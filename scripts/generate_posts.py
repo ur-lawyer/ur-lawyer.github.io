@@ -2,6 +2,7 @@
 import os
 import time
 import datetime
+from pathlib import Path
 import re
 
 # Import all modules
@@ -119,6 +120,31 @@ def generate_smart_hashtags(title, focus_kw, semantic_kw, article_content):
     
     return hashtags
 
+def queue_url_for_gsc(url, title=""):
+    """Queue URL for automatic GSC submission"""
+    pending_file = Path("pending_gsc_urls.json")
+    
+    # Load existing queue
+    if pending_file.exists():
+        with open(pending_file, 'r') as f:
+            urls_data = json.load(f)
+    else:
+        urls_data = []
+    
+    # Add new URL
+    urls_data.append({
+        'url': url,
+        'title': title,
+        'queued_at': datetime.now().isoformat(),
+        'status': 'pending'
+    })
+    
+    # Save queue
+    with open(pending_file, 'w') as f:
+        json.dump(urls_data, f, indent=2)
+    
+    print(f"\n✅ URL queued: {url}")
+    print(f"📊 Total pending: {len([u for u in urls_data if u['status'] == 'pending'])}")
 
 def create_twitter_post(title, permalink, focus_kw, semantic_kw, article_content, image_path=None):
     """
@@ -253,171 +279,164 @@ def main():
         return
     print("✅ FREEPIK_API_KEY found")
     
-    # # Show keywords status
-    # keywords_count = get_keywords_count()
-    # print(f"\n📊 Posts to generate this run: {POSTS_PER_RUN}")
-    # print(f"📋 Keywords available: {keywords_count}")
+    # Show keywords status
+    keywords_count = get_keywords_count()
+    print(f"\n📊 Posts to generate this run: {POSTS_PER_RUN}")
+    print(f"📋 Keywords available: {keywords_count}")
     
-    # posts_generated = 0
+    posts_generated = 0
     
-    # for post_num in range(1, POSTS_PER_RUN + 1):
-    #     print(f"\n{'=' * 60}")
-    #     print(f"📝 Processing Post {post_num}/{POSTS_PER_RUN}")
-    #     print("=" * 60)
+    for post_num in range(1, POSTS_PER_RUN + 1):
+        print(f"\n{'=' * 60}")
+        print(f"📝 Processing Post {post_num}/{POSTS_PER_RUN}")
+        print("=" * 60)
         
-    #     # Get next keyword
-    #     row = get_keyword_row()
-    #     if not row:
-    #         print(f"❌ No more keywords left")
-    #         break
+        # Get next keyword
+        row = get_keyword_row()
+        if not row:
+            print(f"❌ No more keywords left")
+            break
         
-    #     print(f"\n📋 Keyword: {row[:80]}...")
+        print(f"\n📋 Keyword: {row[:80]}...")
         
-    #     # Parse keyword with new format
-    #     keyword_data = parse_keyword_row(row)
-    #     if not keyword_data:
-    #         print(f"❌ Invalid keyword format")
-    #         remove_keyword_from_file()  # Remove invalid keyword
-    #         continue
+        # Parse keyword with new format
+        keyword_data = parse_keyword_row(row)
+        if not keyword_data:
+            print(f"❌ Invalid keyword format")
+            remove_keyword_from_file()  # Remove invalid keyword
+            continue
         
-    #     title = keyword_data['title']
-    #     focus_kw = keyword_data['focus_kw']
-    #     permalink = keyword_data['permalink']
-    #     semantic_kw = keyword_data['semantic_kw']
-    #     affiliate_links = keyword_data['affiliate_links']
+        title = keyword_data['title']
+        focus_kw = keyword_data['focus_kw']
+        permalink = keyword_data['permalink']
+        semantic_kw = keyword_data['semantic_kw']
+        affiliate_links = keyword_data['affiliate_links']
         
-    #     print(f"✅ Parsed: {title[:60]}...")
+        print(f"✅ Parsed: {title[:60]}...")
         
-    #     # Generate file paths
-    #     today = datetime.date.today().isoformat()
-    #     post_path = f"{POSTS_DIR}/{today}-{permalink}.md"
-    #     image_file = f"{IMAGES_DIR}/{permalink}.webp"
+        # Generate file paths
+        today = datetime.date.today().isoformat()
+        post_path = f"{POSTS_DIR}/{today}-{permalink}.md"
+        image_file = f"{IMAGES_DIR}/{permalink}.webp"
         
-    #     # Check if post already exists
-    #     if os.path.exists(post_path):
-    #         print(f"\n⚠️  Post already exists: {post_path}")
-    #         remove_keyword_from_file()  # Remove duplicate
-    #         continue
+        # Check if post already exists
+        if os.path.exists(post_path):
+            print(f"\n⚠️  Post already exists: {post_path}")
+            remove_keyword_from_file()  # Remove duplicate
+            continue
         
-    #     # Generate content
-    #     try:
-    #         # Step 1: Generate article
-    #         print(f"\n{'=' * 60}")
-    #         print("Step 1: Generating Article")
-    #         print("=" * 60)
-    #         article = generate_article(title, focus_kw, permalink, semantic_kw)
-    #         print(f"✅ Article generated ({len(article)} characters)")
+        # Generate content
+        try:
+            # Step 1: Generate article
+            print(f"\n{'=' * 60}")
+            print("Step 1: Generating Article")
+            print("=" * 60)
+            article = generate_article(title, focus_kw, permalink, semantic_kw)
+            print(f"✅ Article generated ({len(article)} characters)")
             
-    #         # Step 2: Generate image prompt
-    #         print(f"\n{'=' * 60}")
-    #         print("Step 2: Generating Image Prompt")
-    #         print("=" * 60)
-    #         image_prompt = generate_image_prompt(title)
-    #         print(f"✅ Image prompt generated")
+            # Step 2: Generate image prompt
+            print(f"\n{'=' * 60}")
+            print("Step 2: Generating Image Prompt")
+            print("=" * 60)
+            image_prompt = generate_image_prompt(title)
+            print(f"✅ Image prompt generated")
             
-    #         # Step 3: Generate image
-    #         print(f"\n{'=' * 60}")
-    #         print("Step 3: Generating & Compressing Image")
-    #         print("=" * 60)
-    #         generate_image_freepik(image_prompt, image_file)
+            # Step 3: Generate image
+            print(f"\n{'=' * 60}")
+            print("Step 3: Generating & Compressing Image")
+            print("=" * 60)
+            generate_image_freepik(image_prompt, image_file)
             
-    #         # Step 4: Save post
-    #         print(f"\n{'=' * 60}")
-    #         print("Step 4: Saving Post")
-    #         print("=" * 60)
-    #         with open(post_path, "w", encoding="utf-8") as f:
-    #             f.write(article)
-    #         print(f"✅ Post saved: {post_path}")
+            # Step 4: Save post
+            print(f"\n{'=' * 60}")
+            print("Step 4: Saving Post")
+            print("=" * 60)
+            with open(post_path, "w", encoding="utf-8") as f:
+                f.write(article)
+            print(f"✅ Post saved: {post_path}")
             
-    #         post_url = f"{SITE_DOMAIN}/{permalink}"
+            post_url = f"{SITE_DOMAIN}/{permalink}"
             
-    #         print(f"\n{'=' * 60}")
-    #         print(f"✅ SUCCESS! Post {post_num} Generated")
-    #         print("=" * 60)
-    #         print(f"📰 Title: {title}")
-    #         print(f"🌐 URL: {post_url}")
+            print(f"\n{'=' * 60}")
+            print(f"✅ SUCCESS! Post {post_num} Generated")
+            print("=" * 60)
+            print(f"📰 Title: {title}")
+            print(f"🌐 URL: {post_url}")
             
-    #         posts_generated += 1
+            posts_generated += 1
             
-    #         # Step 5: Wait before indexing
-    #         if post_num == POSTS_PER_RUN or post_num == posts_generated:
-    #             print(f"\n{'=' * 60}")
-    #             print(f"Step 5: Waiting {WAIT_TIME_BEFORE_INDEXING // 60} minutes")
-    #             print("=" * 60)
-    #             print("⏳ Allowing GitHub Pages to deploy...")
+            # Step 5: Wait before indexing
+            if post_num == POSTS_PER_RUN or post_num == posts_generated:
+                print(f"\n{'=' * 60}")
+                print(f"Step 5: Waiting {WAIT_TIME_BEFORE_INDEXING // 60} minutes")
+                print("=" * 60)
+                print("⏳ Allowing GitHub Pages to deploy...")
                 
-    #             for remaining in range(WAIT_TIME_BEFORE_INDEXING, 0, -30):
-    #                 minutes = remaining // 60
-    #                 seconds = remaining % 60
-    #                 print(f"⏰ Time remaining: {minutes}m {seconds}s", end='\r')
-    #                 # time.sleep(30)
+                for remaining in range(WAIT_TIME_BEFORE_INDEXING, 0, -30):
+                    minutes = remaining // 60
+                    seconds = remaining % 60
+                    print(f"⏰ Time remaining: {minutes}m {seconds}s", end='\r')
+                    time.sleep(30)
                 
                 
                 
-    # Step 6: Submit to Google Search Console (Browser Only)
-    print(f"\n{'=' * 60}")
-    print("Step 6: Submitting to Google Search Console")
-    print("=" * 60)
-    
-    indexing_status = "Not Attempted"
-    try:
-        # URLS_TO_SUBMIT = post_url
-        URLS_TO_SUBMIT = "https://ur-lawyer.github.io/when-to-hire-medical-malpractice-lawyer"
-        print(f"📋 URLS_TO_SUBMIT: {URLS_TO_SUBMIT}")
-        
-        gsc_success = submit_url_to_gsc(URLS_TO_SUBMIT)
-        
-        if gsc_success:
-            indexing_status = "Success (GSC Browser)"
-            print("✅ URL submitted to Google Search Console!")
-        else:
-            indexing_status = "Failed (GSC Browser)"
-            print("⚠️ GSC submission failed")
-            
-    except Exception as e:
-        indexing_status = f"Failed - {str(e)[:100]}"
-        print(f"⚠️ GSC automation failed: {e}")
-    
-    print(f"\n📊 Indexing Status: {indexing_status}")
+                # Step 6: Submit to Google Search Console (Browser Only)
+                # After successfully creating post:
+                post_url = f"{SITE_DOMAIN}/{permalink}"
                 
+                # OLD CODE - REMOVE THIS:
+                # print(f"\n{'=' * 60}")
+                # print("Step 6: Submitting to Google Search Console")
+                # print("=" * 60)
+                # gsc_success = submit_url_to_gsc(post_url)
+                
+                # NEW CODE - ADD THIS:
+                print(f"\n{'=' * 60}")
+                print("Step 6: Queueing for Google Search Console")
+                print("=" * 60)
+                
+                queue_url_for_gsc(post_url, title)
+                
+                print("✅ URL queued successfully!")
+                print("🤖 Your Mac daemon will handle GSC submission")
                     
-        #         # Step 10: Send Push Notification
-        #         print(f"\n{'=' * 60}")
-        #         print("Step 10: Sending Push Notification")
-        #         print("=" * 60)
+                # Step 10: Send Push Notification
+                print(f"\n{'=' * 60}")
+                print("Step 10: Sending Push Notification")
+                print("=" * 60)
 
-        #         try:
-        #             send_blog_post_notification(title, permalink, focus_kw)
-        #         except Exception as e:
-        #             print(f"⚠️ Push notification failed (non-critical): {e}")
+                try:
+                    send_blog_post_notification(title, permalink, focus_kw)
+                except Exception as e:
+                    print(f"⚠️ Push notification failed (non-critical): {e}")
             
-        #     # Step 11: Remove keyword after success
-        #     print(f"\n{'=' * 60}")
-        #     print("Step 11: Removing Keyword from File")
-        #     print("=" * 60)
-        #     remove_keyword_from_file()
-        #     print("✅ Keyword removed from keywords.txt")
+            # Step 11: Remove keyword after success
+            print(f"\n{'=' * 60}")
+            print("Step 11: Removing Keyword from File")
+            print("=" * 60)
+            remove_keyword_from_file()
+            print("✅ Keyword removed from keywords.txt")
             
-        # except Exception as e:
-        #     print(f"\n{'=' * 60}")
-        #     print(f"❌ FAILED: {e}")
-        #     print("=" * 60)
-        #     print(f"⚠️ Keyword NOT removed - will retry next run")
-        #     import traceback
-        #     traceback.print_exc()
-        #     continue
+        except Exception as e:
+            print(f"\n{'=' * 60}")
+            print(f"❌ FAILED: {e}")
+            print("=" * 60)
+            print(f"⚠️ Keyword NOT removed - will retry next run")
+            import traceback
+            traceback.print_exc()
+            continue
     
     # Final summary
-    # print(f"\n{'=' * 60}")
-    # print("🎉 WORKFLOW COMPLETE")
-    # print("=" * 60)
-    # print(f"✅ Posts generated: {posts_generated}")
-    # print(f"📊 Keywords remaining: {get_keywords_count()}")
-    # print(f"\n📱 Social Media Summary:")
-    # print(f"   • All posts automatically shared to Twitter & LinkedIn")
-    # print(f"   • Smart hashtag generation based on article content")
-    # print(f"   • Platform-optimized formatting")
-    # print("=" * 60)
+    print(f"\n{'=' * 60}")
+    print("🎉 WORKFLOW COMPLETE")
+    print("=" * 60)
+    print(f"✅ Posts generated: {posts_generated}")
+    print(f"📊 Keywords remaining: {get_keywords_count()}")
+    print(f"\n📱 Social Media Summary:")
+    print(f"   • All posts automatically shared to Twitter & LinkedIn")
+    print(f"   • Smart hashtag generation based on article content")
+    print(f"   • Platform-optimized formatting")
+    print("=" * 60)
 
 
 if __name__ == "__main__":

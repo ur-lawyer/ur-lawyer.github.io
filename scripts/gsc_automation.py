@@ -1,416 +1,230 @@
-"""Automate URL submission to Google Search Console using Selenium with undetected-chromedriver"""
+#!/usr/bin/env python3
+"""
+GSC Auto Queue Processor with Video Recording
+- Starts automatically when Mac boots
+- Pulls pending URLs from GitHub
+- Processes them using your gsc_automation.py (with video recording)
+- Commits results back to GitHub
+"""
 import os
 import sys
-import time
 import json
-import base64
-import shutil
-try:
-    import undetected_chromedriver as uc
-    UNDETECTED_AVAILABLE = True
-except ImportError:
-    UNDETECTED_AVAILABLE = False
-    from selenium import webdriver
-    from selenium.webdriver.chrome.service import Service
-    from selenium.webdriver.chrome.options import Options
-    from webdriver_manager.chrome import ChromeDriverManager
+import time
+import subprocess
+from pathlib import Path
+from datetime import datetime
 
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from config import GSC_PROPERTY_URL, GSC_CHROME_PROFILE_PATH, GSC_MAX_RETRIES, GSC_HEADLESS
+# Configuration
+REPO_DIR = Path.home() / "Documents/ur-lawyer.github.io"
+SCRIPTS_DIR = REPO_DIR / "scripts"
+PENDING_FILE = REPO_DIR / "pending_gsc_urls.json"
+LOG_FILE = REPO_DIR / "gsc_auto_processor.log"
+CHECK_INTERVAL = 300  # Check every 5 minutes
 
+# Add scripts directory to Python path
+sys.path.insert(0, str(SCRIPTS_DIR))
 
-def load_cookies_from_env():
-    """Load cookies from environment variable (GitHub Secrets)"""
-    cookies_env = os.getenv('GSC_COOKIES')
-    if not cookies_env:
-        return None
-    
+def log(message):
+    """Log to file and print"""
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+    log_message = f"[{timestamp}] {message}"
+    print(log_message)
+    with open(LOG_FILE, 'a') as f:
+        f.write(log_message + '\n')
+
+def git_pull():
+    """Pull latest changes from GitHub"""
     try:
-        # Decode from base64
-        cookies_json = base64.b64decode(cookies_env).decode()
-        cookies = json.loads(cookies_json)
-        print(f"✅ Loaded {len(cookies)} cookies from environment")
-        return cookies
-    except Exception as e:
-        print(f"⚠️  Failed to load cookies from environment: {e}")
-        return None
-
-
-def setup_chrome_driver(headless=None):
-    """
-    Setup Chrome driver with anti-detection measures
-    
-    Args:
-        headless: Override headless mode from config
-        
-    Returns:
-        webdriver.Chrome: Configured Chrome driver
-    """
-    if headless is None:
-        headless = GSC_HEADLESS
-    
-    # Check for cookies from environment first (GitHub Actions)
-    use_cookies = load_cookies_from_env() is not None
-    
-    # Check if we have saved profile (local use)
-    use_profile = not use_cookies and os.path.exists(GSC_CHROME_PROFILE_PATH)
-    
-    try:
-        if UNDETECTED_AVAILABLE:
-            print("✅ Using undetected-chromedriver (anti-bot)")
-            
-            # Options for undetected-chromedriver
-            options = uc.ChromeOptions()
-            
-            # Use saved profile if available
-            if use_profile:
-                options.add_argument(f"--user-data-dir={GSC_CHROME_PROFILE_PATH}")
-                print(f"✅ Using saved profile: {GSC_CHROME_PROFILE_PATH}")
-            
-            # Additional stealth options
-            options.add_argument("--disable-blink-features=AutomationControlled")
-            options.add_argument("--no-first-run")
-            options.add_argument("--no-default-browser-check")
-            options.add_argument("--window-size=1920,1080")
-            
-            # Headless mode (experimental with undetected-chromedriver)
-            if headless:
-                options.add_argument("--headless=new")
-                options.add_argument("--no-sandbox")
-                options.add_argument("--disable-dev-shm-usage")
-                print("🔇 Running in headless mode")
-            
-            # Create driver with undetected-chromedriver
-            driver = uc.Chrome(options=options, version_main=None)
-            driver.set_page_load_timeout(30)
-            
+        log("📥 Pulling latest changes from GitHub...")
+        result = subprocess.run(
+            ['git', 'pull'],
+            cwd=REPO_DIR,
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+        if result.returncode == 0:
+            log("✅ Git pull successful")
+            return True
         else:
-            print("⚠️  undetected-chromedriver not available, using regular selenium")
-            print("   Install it: pip install undetected-chromedriver")
-            
-            chrome_options = Options()
-            
-            if use_profile:
-                chrome_options.add_argument(f"--user-data-dir={GSC_CHROME_PROFILE_PATH}")
-                print(f"✅ Using saved profile: {GSC_CHROME_PROFILE_PATH}")
-            
-            # Chrome options
-            chrome_options.add_argument("--no-first-run")
-            chrome_options.add_argument("--no-default-browser-check")
-            chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-            chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-            chrome_options.add_experimental_option('useAutomationExtension', False)
-            chrome_options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-            chrome_options.add_argument("--window-size=1920,1080")
-            
-            if headless:
-                chrome_options.add_argument("--headless=new")
-                chrome_options.add_argument("--no-sandbox")
-                chrome_options.add_argument("--disable-dev-shm-usage")
-                chrome_options.add_argument("--disable-gpu")
-                print("🔇 Running in headless mode")
-            
-            service = Service(ChromeDriverManager().install())
-            driver = webdriver.Chrome(service=service, options=chrome_options)
-            driver.set_page_load_timeout(30)
-        
-        # If we have cookies from environment, load them
-        cookies = load_cookies_from_env()
-        if cookies:
-            print(f"🔐 Loading authentication cookies...")
-            
-            # Navigate to google.com first
-            driver.get("https://www.google.com")
-            time.sleep(2)
-            
-            # Add cookies
-            cookies_added = 0
-            for cookie in cookies:
-                try:
-                    # Clean up cookie format for Selenium
-                    cookie_clean = {
-                        'name': cookie['name'],
-                        'value': cookie['value'],
-                        'domain': cookie['domain'].lstrip('.'),
-                        'path': cookie.get('path', '/'),
-                        'secure': cookie.get('secure', False),
-                        'httpOnly': cookie.get('httpOnly', False)
-                    }
-                    
-                    # Add expiry if present
-                    if 'expires' in cookie and cookie['expires']:
-                        cookie_clean['expiry'] = int(cookie['expires'] / 1000000 - 11644473600)
-                    
-                    driver.add_cookie(cookie_clean)
-                    cookies_added += 1
-                except Exception as e:
-                    # Skip problematic cookies
-                    pass
-            
-            print(f"✅ Added {cookies_added} cookies")
-            
-            # Refresh to activate session
-            driver.refresh()
-            time.sleep(2)
-            
-            # Navigate to accounts.google.com to verify session
-            print(f"🔄 Verifying authentication...")
-            driver.get("https://accounts.google.com")
-            time.sleep(3)
-            
-            # Check if we're logged in
-            if "ServiceLogin" not in driver.current_url and "signin" not in driver.current_url:
-                print(f"✅ Authentication verified!")
-            else:
-                print(f"⚠️  May not be authenticated - will try anyway")
-        
-        return driver
-        
+            log(f"⚠️  Git pull failed: {result.stderr}")
+            return False
     except Exception as e:
-        print(f"❌ Error setting up Chrome driver: {e}")
-        import traceback
-        traceback.print_exc()
-        return None
+        log(f"❌ Git pull error: {e}")
+        return False
 
-
-def submit_url_to_gsc(url, headless=None):
-    """
-    Submit single URL to Google Search Console
-    
-    Args:
-        url: URL to submit for indexing
-        headless: Override headless mode
+def git_commit_and_push():
+    """Commit and push changes back to GitHub"""
+    try:
+        log("📤 Committing and pushing changes...")
         
-    Returns:
-        bool: True if successful, False otherwise
-    """
-    print(f"\n{'=' * 60}")
-    print(f"🔎 Submitting URL to Google Search Console")
-    print(f"{'=' * 60}")
-    print(f"🌐 URL: {url}")
-    print(f"🏠 Property: {GSC_PROPERTY_URL}")
-    
-    driver = None
+        # Add the pending file
+        subprocess.run(['git', 'add', 'pending_gsc_urls.json'], cwd=REPO_DIR, check=True)
+        
+        # Commit
+        result = subprocess.run(
+            ['git', 'commit', '-m', 'Update GSC submission status [auto]'],
+            cwd=REPO_DIR,
+            capture_output=True,
+            text=True
+        )
+        
+        if result.returncode != 0 and 'nothing to commit' not in result.stdout:
+            log(f"⚠️  Git commit failed: {result.stderr}")
+            return False
+        
+        # Push
+        result = subprocess.run(
+            ['git', 'push'],
+            cwd=REPO_DIR,
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+        
+        if result.returncode == 0:
+            log("✅ Changes pushed to GitHub")
+            return True
+        else:
+            log(f"⚠️  Git push failed: {result.stderr}")
+            return False
+            
+    except Exception as e:
+        log(f"❌ Git operation error: {e}")
+        return False
+
+def get_pending_urls():
+    """Get pending URLs from JSON file"""
+    if not PENDING_FILE.exists():
+        return [], []
     
     try:
-        # Setup driver
-        driver = setup_chrome_driver(headless)
-        if not driver:
-            print("❌ Failed to setup Chrome driver")
-            return False
+        with open(PENDING_FILE, 'r') as f:
+            urls_data = json.load(f)
         
-        # Navigate to URL Inspection tool
-        inspection_url = f"https://search.google.com/search-console/inspect?resource_id={GSC_PROPERTY_URL}"
-        print(f"\n📍 Navigating to URL Inspection tool...")
-        driver.get(inspection_url)
+        pending = [u for u in urls_data if u.get('status') == 'pending']
+        return pending, urls_data
+    except Exception as e:
+        log(f"❌ Error reading pending file: {e}")
+        return [], []
+
+def process_pending_urls():
+    """Process all pending URLs using gsc_automation.py"""
+    pending, urls_data = get_pending_urls()
+    
+    if not pending:
+        log("ℹ️  No pending URLs to process")
+        return False
+    
+    log(f"📋 Found {len(pending)} pending URLs to process")
+    
+    # Import GSC automation
+    from gsc_automation import GSCAutomation
+    
+    # Initialize with video recording enabled
+    bot = GSCAutomation(
+        profile_path=str(SCRIPTS_DIR / "chrome_profile"),
+        headless=False,
+        record_video=True  # ✅ Video recording ON
+    )
+    
+    try:
+        property_id = bot.get_property_id("https://ur-lawyer.github.io/", use_domain_property=False)
         
-        # Wait and check for redirects
-        time.sleep(5)
+        processed = 0
         
-        # Check if we're logged in
-        current_url = driver.current_url
-        if "accounts.google.com" in current_url or "ServiceLogin" in current_url:
-            print(f"❌ Not logged in! Redirected to: {current_url}")
+        for url_data in pending:
+            log(f"\n{'='*60}")
+            log(f"Processing: {url_data.get('title', 'Untitled')}")
+            log(f"URL: {url_data['url']}")
+            log(f"{'='*60}")
             
-            # Take screenshot for debugging
-            screenshot_path = "/tmp/gsc_login_fail.png"
-            driver.save_screenshot(screenshot_path)
-            print(f"📸 Screenshot saved: {screenshot_path}")
+            result = bot.submit_url(url_data['url'], property_id)
             
-            # Print page source snippet for debugging
-            print(f"\n🔍 Page title: {driver.title}")
-            print(f"🍪 Cookies present: {len(driver.get_cookies())}")
+            if result is True:
+                url_data['status'] = 'submitted'
+                url_data['submitted_at'] = datetime.now().isoformat()
+                log(f"✅ Successfully submitted")
+                processed += 1
+            elif result == 'already_requested':
+                url_data['status'] = 'already_requested'
+                url_data['submitted_at'] = datetime.now().isoformat()
+                log(f"✅ Already requested")
+                processed += 1
+            elif result == 'quota_reached':
+                url_data['status'] = 'quota_reached'
+                log(f"⚠️  Quota reached - stopping for now")
+                break
+            else:
+                url_data['status'] = 'failed'
+                url_data['failed_at'] = datetime.now().isoformat()
+                log(f"❌ Submission failed")
             
-            return False
-        
-        print("✅ Successfully accessed Google Search Console")
-        print(f"✅ Current page: {driver.title}")
-        
-        # Find the URL input field
-        print(f"\n🔍 Looking for URL input field...")
-        
-        # Wait for page to fully load
-        time.sleep(3)
-        
-        # Try multiple selectors
-        selectors = [
-            "input[type='text'][aria-label*='URL']",
-            "input[type='text'][placeholder*='URL']",
-            "input[type='url']",
-            "input.devsite-search-field",
-            "input[jsname]",
-        ]
-        
-        url_input = None
-        for selector in selectors:
-            try:
-                url_input = WebDriverWait(driver, 5).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, selector))
-                )
-                if url_input and url_input.is_displayed():
-                    print(f"✅ Found input field with selector: {selector}")
-                    break
-                else:
-                    url_input = None
-            except TimeoutException:
-                continue
-        
-        if not url_input:
-            # Try finding any visible text input
-            try:
-                inputs = driver.find_elements(By.CSS_SELECTOR, "input[type='text']")
-                for inp in inputs:
-                    if inp.is_displayed():
-                        url_input = inp
-                        print("✅ Found visible text input field")
-                        break
-            except NoSuchElementException:
-                pass
-        
-        if not url_input:
-            print("❌ Could not find URL input field")
-            screenshot_path = "/tmp/gsc_no_input.png"
-            driver.save_screenshot(screenshot_path)
-            print(f"📸 Screenshot saved: {screenshot_path}")
-            return False
-        
-        # Enter URL with human-like typing
-        print(f"⌨️  Entering URL...")
-        url_input.click()
-        time.sleep(0.5)
-        url_input.clear()
-        time.sleep(0.5)
-        
-        # Type slowly to mimic human
-        for char in url:
-            url_input.send_keys(char)
-            time.sleep(0.05)
-        
-        time.sleep(1)
-        url_input.send_keys(Keys.RETURN)
-        
-        print(f"⏳ Waiting for inspection to complete...")
-        time.sleep(15)  # Give it time to analyze
-        
-        # Look for "Request Indexing" button
-        print(f"🔍 Looking for 'Request Indexing' button...")
-        
-        button_selectors = [
-            "//button[contains(text(), 'Request indexing')]",
-            "//button[contains(text(), 'REQUEST INDEXING')]",
-            "//span[contains(text(), 'Request indexing')]/ancestor::button",
-            "//button[contains(@aria-label, 'Request indexing')]",
-        ]
-        
-        request_button = None
-        for selector in button_selectors:
-            try:
-                request_button = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable((By.XPATH, selector))
-                )
-                if request_button:
-                    print(f"✅ Found 'Request Indexing' button")
-                    break
-            except TimeoutException:
-                continue
-        
-        if not request_button:
-            print("⚠️  'Request Indexing' button not found")
+            # Save progress after each URL
+            with open(PENDING_FILE, 'w') as f:
+                json.dump(urls_data, f, indent=2)
             
-            # Check page for status messages
-            page_text = driver.page_source.lower()
-            if "already" in page_text or "queue" in page_text or "recently requested" in page_text:
-                print("✅ URL appears to already be in indexing queue")
-                return True
-            
-            # Take screenshot
-            screenshot_path = "/tmp/gsc_no_button.png"
-            driver.save_screenshot(screenshot_path)
-            print(f"📸 Screenshot saved: {screenshot_path}")
-            return False
+            # Wait between submissions
+            if url_data != pending[-1]:
+                log("⏳ Waiting 15 seconds before next URL...")
+                time.sleep(15)
         
-        # Click the button with delay
-        print(f"🖱️  Clicking 'Request Indexing' button...")
-        time.sleep(1)
-        request_button.click()
-        
-        # Wait for confirmation
-        print(f"⏳ Waiting for confirmation...")
-        time.sleep(8)
-        
-        # Check for success
-        try:
-            success_selectors = [
-                "//span[contains(text(), 'Indexing requested')]",
-                "//div[contains(text(), 'requested')]",
-                "//*[contains(text(), 'success')]",
-            ]
-            
-            for selector in success_selectors:
-                try:
-                    WebDriverWait(driver, 5).until(
-                        EC.presence_of_element_located((By.XPATH, selector))
-                    )
-                    print("✅ SUCCESS! URL submitted for indexing")
-                    return True
-                except TimeoutException:
-                    continue
-            
-            # Check page text
-            page_text = driver.page_source.lower()
-            if "requested" in page_text or "submitted" in page_text:
-                print("✅ SUCCESS! URL appears to be submitted")
-                return True
-            
-            print("⚠️  Could not confirm submission, but no errors detected")
-            return True
-            
-        except Exception as e:
-            print(f"⚠️  Error checking confirmation: {e}")
-            print("✅ Assuming success (no errors during submission)")
-            return True
+        log(f"\n📊 Processed {processed} URLs successfully")
+        log(f"🎬 Videos saved in: {SCRIPTS_DIR}/recordings/")
+        return processed > 0
         
     except Exception as e:
-        print(f"❌ Error during submission: {e}")
+        log(f"❌ Error during processing: {e}")
         import traceback
-        traceback.print_exc()
+        log(traceback.format_exc())
         return False
-        
     finally:
-        if driver:
-            print(f"\n🔒 Closing browser...")
-            time.sleep(2)
-            driver.quit()
-
+        bot.close()
+        log("🔒 Browser closed")
 
 def main():
-    """Main function for command-line usage"""
-    import argparse
+    """Main loop - runs continuously"""
+    log("="*60)
+    log("🤖 GSC Auto Queue Processor Started (with Video Recording)")
+    log(f"📁 Repository: {REPO_DIR}")
+    log(f"📝 Log file: {LOG_FILE}")
+    log(f"🎥 Recordings: {SCRIPTS_DIR}/recordings/")
+    log(f"⏱️  Check interval: {CHECK_INTERVAL}s")
+    log("="*60)
     
-    parser = argparse.ArgumentParser(description='Submit URLs to Google Search Console')
-    parser.add_argument('--url', type=str, help='Single URL to submit')
-    parser.add_argument('--urls', type=str, nargs='+', help='Multiple URLs to submit')
-    parser.add_argument('--visible', action='store_true', help='Run with visible browser (not headless)')
+    # Process queue immediately on startup
+    log("\n🔄 Initial check for pending URLs...")
+    git_pull()
     
-    args = parser.parse_args()
+    if process_pending_urls():
+        git_commit_and_push()
+        log("\n✅ Initial queue processed successfully!")
     
-    headless = not args.visible
+    # Then check periodically
+    log(f"\n👀 Now monitoring for new URLs every {CHECK_INTERVAL//60} minutes...")
     
-    if args.url:
-        submit_url_to_gsc(args.url, headless=headless)
-    elif args.urls:
-        for url in args.urls:
-            submit_url_to_gsc(url, headless=headless)
-            if len(args.urls) > 1:
-                time.sleep(10)
-    else:
-        print("❌ Please provide --url or --urls argument")
-        parser.print_help()
-
+    try:
+        while True:
+            time.sleep(CHECK_INTERVAL)
+            
+            log(f"\n🔄 Periodic check ({time.strftime('%I:%M %p')})...")
+            
+            # Pull latest changes
+            if git_pull():
+                # Process any new pending URLs
+                if process_pending_urls():
+                    # Push results back
+                    git_commit_and_push()
+                    log("✅ Queue processed and synced")
+                else:
+                    log("ℹ️  No new URLs to process")
+            
+    except KeyboardInterrupt:
+        log("\n🛑 Processor stopped by user")
+    except Exception as e:
+        log(f"\n❌ Unexpected error: {e}")
+        import traceback
+        log(traceback.format_exc())
 
 if __name__ == "__main__":
     main()

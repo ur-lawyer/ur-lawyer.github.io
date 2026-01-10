@@ -1,0 +1,196 @@
+#!/usr/bin/env python3
+"""
+GSC Queue Daemon - Watches folder and auto-submits URLs to Google Search Console
+Run this in background on your Mac: python3 gsc_daemon.py
+"""
+import os
+import sys
+import time
+import subprocess
+from pathlib import Path
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+
+# Configuration
+QUEUE_DIR = Path.home() / "gsc_queue"
+PROCESSED_DIR = QUEUE_DIR / "processed"
+FAILED_DIR = QUEUE_DIR / "failed"
+LOG_FILE = QUEUE_DIR / "daemon.log"
+GSC_SCRIPT_DIR = Path.home() / "Documents/ur-lawyer.github.io/scripts"
+YOUR_DOMAIN = "https://ur-lawyer.github.io/"
+
+# Create directories
+QUEUE_DIR.mkdir(exist_ok=True)
+PROCESSED_DIR.mkdir(exist_ok=True)
+FAILED_DIR.mkdir(exist_ok=True)
+
+def log(message):
+    """Log to file and print"""
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+    log_message = f"[{timestamp}] {message}"
+    print(log_message)
+    with open(LOG_FILE, 'a') as f:
+        f.write(log_message + '\n')
+
+class URLHandler(FileSystemEventHandler):
+    """Handle new URL files"""
+    
+    def __init__(self):
+        self.processing = set()  # Track files being processed
+    
+    def on_created(self, event):
+        """Called when a new file is created"""
+        if event.is_directory:
+            return
+        
+        filepath = Path(event.src_path)
+        
+        # Only process .txt files starting with 'url_'
+        if filepath.suffix == '.txt' and filepath.name.startswith('url_'):
+            # Avoid processing same file multiple times
+            if str(filepath) in self.processing:
+                return
+            
+            self.processing.add(str(filepath))
+            
+            # Wait a moment for file to be fully written
+            time.sleep(2)
+            
+            self.process_url_file(filepath)
+            
+            self.processing.discard(str(filepath))
+    
+    def process_url_file(self, filepath):
+        """Process a URL file and submit to GSC"""
+        try:
+            log(f"📥 New URL file detected: {filepath.name}")
+            
+            # Check if file still exists
+            if not filepath.exists():
+                log(f"⚠️  File disappeared, skipping")
+                return
+            
+            # Read URL
+            with open(filepath, 'r') as f:
+                url = f.read().strip()
+            
+            if not url:
+                log(f"⚠️  Empty file, skipping")
+                filepath.unlink()  # Delete empty file
+                return
+            
+            log(f"🔗 URL: {url}")
+            log(f"🚀 Starting GSC automation...")
+            
+            # Build command to run gsc_automation.py
+            cmd = [
+                'python3',
+                'gsc_automation.py',
+                '--url', url,
+                '--domain', YOUR_DOMAIN
+            ]
+            
+            # Run GSC automation
+            result = subprocess.run(
+                cmd,
+                cwd=GSC_SCRIPT_DIR,
+                capture_output=True,
+                text=True,
+                timeout=600  # 10 minute timeout
+            )
+            
+            success = result.returncode == 0
+            
+            if success:
+                log(f"✅ Successfully submitted: {url}")
+                # Move to processed
+                dest = PROCESSED_DIR / filepath.name
+                filepath.rename(dest)
+                log(f"📁 Moved to processed/")
+            else:
+                log(f"❌ Failed to submit: {url}")
+                if result.stderr:
+                    log(f"Error output: {result.stderr[:300]}")
+                # Move to failed
+                dest = FAILED_DIR / filepath.name
+                filepath.rename(dest)
+                log(f"📁 Moved to failed/")
+            
+        except subprocess.TimeoutExpired:
+            log(f"⏰ Timeout processing {filepath.name}")
+            dest = FAILED_DIR / filepath.name
+            if filepath.exists():
+                filepath.rename(dest)
+        except Exception as e:
+            log(f"❌ Error processing {filepath.name}: {e}")
+            import traceback
+            log(traceback.format_exc())
+            # Move to failed on error
+            dest = FAILED_DIR / filepath.name
+            if filepath.exists():
+                filepath.rename(dest)
+
+def check_requirements():
+    """Check if all requirements are met"""
+    errors = []
+    
+    # Check if gsc_automation.py exists
+    gsc_script = GSC_SCRIPT_DIR / "gsc_automation.py"
+    if not gsc_script.exists():
+        errors.append(f"❌ gsc_automation.py not found at: {gsc_script}")
+    
+    # Check if Chrome profile exists (from first_time_login.py)
+    chrome_profile = Path.home() / ".gsc_chrome_profile"
+    profile_exists = chrome_profile.exists() or (GSC_SCRIPT_DIR / "chrome_profile").exists()
+    
+    if not profile_exists:
+        errors.append("❌ Chrome profile not found. Run first_time_gsc_login.py first!")
+    
+    return errors
+
+def main():
+    """Main daemon loop"""
+    print("\n" + "="*60)
+    print("🤖 GSC Queue Daemon")
+    print("="*60)
+    
+    # Check requirements
+    errors = check_requirements()
+    if errors:
+        print("\n⚠️  Setup Issues:")
+        for error in errors:
+            print(f"   {error}")
+        print("\nPlease fix these issues before running the daemon.")
+        print("="*60 + "\n")
+        sys.exit(1)
+    
+    log("="*60)
+    log("🚀 GSC Queue Daemon Started")
+    log(f"📁 Watching: {QUEUE_DIR}")
+    log(f"📝 Log file: {LOG_FILE}")
+    log(f"🌐 Domain: {YOUR_DOMAIN}")
+    log("="*60)
+    
+    # Create watchdog observer
+    event_handler = URLHandler()
+    observer = Observer()
+    observer.schedule(event_handler, str(QUEUE_DIR), recursive=False)
+    observer.start()
+    
+    print(f"\n✅ Daemon is running!")
+    print(f"📁 Drop URL files in: {QUEUE_DIR}")
+    print(f"📝 View logs: tail -f {LOG_FILE}")
+    print(f"\n💡 Press Ctrl+C to stop\n")
+    
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        log("🛑 Daemon stopped by user")
+        observer.stop()
+    
+    observer.join()
+    print("\n👋 Daemon stopped\n")
+
+if __name__ == "__main__":
+    main()
