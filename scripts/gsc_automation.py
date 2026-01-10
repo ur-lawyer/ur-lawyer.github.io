@@ -67,6 +67,9 @@ def setup_chrome_driver(headless=None):
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
     chrome_options.add_experimental_option('useAutomationExtension', False)
     
+    # Set a real User-Agent to avoid detection
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+    
     # Headless mode for CI/CD
     if headless:
         chrome_options.add_argument("--headless=new")
