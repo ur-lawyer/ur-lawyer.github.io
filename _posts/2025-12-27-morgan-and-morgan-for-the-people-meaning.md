@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Morgan & Morgan: “For The People” – What Does It Really Mean?"
-description: "Discover what "For The People" truly signifies for Morgan & Morgan clients and the real meaning behind choosing morgan and morgan lawyers for your case."
+description: "Discover what For The People truly signifies for Morgan & Morgan clients and the real meaning behind choosing morgan and morgan lawyers for your case."
 author: Mary
 tags: [morgan and morgan lawyers]
 featured: false
