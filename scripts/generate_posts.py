@@ -354,31 +354,31 @@ def main():
                 
                 
                 
-                # Step 6: Submit to Google Search Console (Browser Only)
-                print(f"\n{'=' * 60}")
-                print("Step 6: Submitting to Google Search Console")
-                print("=" * 60)
-                
-                indexing_status = "Not Attempted"
-                try:
-                    # URLS_TO_SUBMIT = post_url
-                    URLS_TO_SUBMIT = "https://ur-lawyer.github.io/when-to-hire-medical-malpractice-lawyer"
-                    print(f"📋 URLS_TO_SUBMIT: {URLS_TO_SUBMIT}")
-                    
-                    gsc_success = submit_url_to_gsc(URLS_TO_SUBMIT)
-                    
-                    if gsc_success:
-                        indexing_status = "Success (GSC Browser)"
-                        print("✅ URL submitted to Google Search Console!")
-                    else:
-                        indexing_status = "Failed (GSC Browser)"
-                        print("⚠️ GSC submission failed")
-                        
-                except Exception as e:
-                    indexing_status = f"Failed - {str(e)[:100]}"
-                    print(f"⚠️ GSC automation failed: {e}")
-                
-                print(f"\n📊 Indexing Status: {indexing_status}")
+    # Step 6: Submit to Google Search Console (Browser Only)
+    print(f"\n{'=' * 60}")
+    print("Step 6: Submitting to Google Search Console")
+    print("=" * 60)
+    
+    indexing_status = "Not Attempted"
+    try:
+        # URLS_TO_SUBMIT = post_url
+        URLS_TO_SUBMIT = "https://ur-lawyer.github.io/when-to-hire-medical-malpractice-lawyer"
+        print(f"📋 URLS_TO_SUBMIT: {URLS_TO_SUBMIT}")
+        
+        gsc_success = submit_url_to_gsc(URLS_TO_SUBMIT)
+        
+        if gsc_success:
+            indexing_status = "Success (GSC Browser)"
+            print("✅ URL submitted to Google Search Console!")
+        else:
+            indexing_status = "Failed (GSC Browser)"
+            print("⚠️ GSC submission failed")
+            
+    except Exception as e:
+        indexing_status = f"Failed - {str(e)[:100]}"
+        print(f"⚠️ GSC automation failed: {e}")
+    
+    print(f"\n📊 Indexing Status: {indexing_status}")
                 
                     
         #         # Step 10: Send Push Notification
