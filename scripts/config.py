@@ -31,6 +31,12 @@ FREEPIK_API_KEY = os.environ.get("FREEPIK_API_KEY")
 GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
 GOOGLE_SPREADSHEET_ID = os.environ.get("GOOGLE_SPREADSHEET_ID")
 
+# Google Search Console settings
+GSC_PROPERTY_URL = "https://ur-lawyer.github.io"
+GSC_CHROME_PROFILE_PATH = os.path.join(os.path.expanduser("~"), ".gsc_chrome_profile")
+GSC_MAX_RETRIES = 3
+GSC_HEADLESS = True  # Run in headless mode for CI/CD
+
 # Create directories
 os.makedirs(POSTS_DIR, exist_ok=True)
 os.makedirs(IMAGES_DIR, exist_ok=True)
